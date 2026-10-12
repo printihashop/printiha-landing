@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Printiha · T-shirts rap marocain imprimés DTF</title>
+<meta name="description" content="Printiha : t-shirts imprimés DTF aux couleurs du rap marocain. 1 pièce 199 DH, Duo 359 DH, Trio 499 DH. Livraison gratuite au Maroc, paiement à la livraison.">
+<meta property="og:title" content="Printiha · Rap marocain, imprimé DTF">
+<meta property="og:description" content="T-shirts imprimés DTF. Trio à 166 DH la pièce. Livraison gratuite, paiement à la livraison.">
+<meta property="og:image" content="hero.webp">
+<meta property="og:locale" content="fr_MA">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d0d;
+  --bg2:#161616;
+  --card:#1c1c1c;
+  --line:#2c2c2c;
+  --txt:#f4f1ea;
+  --mute:#9a958c;
+  --acc:#e8ff3a;
+  --acc-txt:#0d0d0d;
+  --red:#ff4d3a;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;line-height:1.5;padding-bottom:96px;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+.display{font-family:Anton,Impact,sans-serif;text-transform:uppercase;letter-spacing:.5px;line-height:1}
+
+/* Header */
+header{position:sticky;top:0;z-index:50;background:rgba(13,13,13,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:58px}
+.logo{font-family:Anton,Impact,sans-serif;font-size:26px;letter-spacing:1px}
+.logo span{color:var(--acc)}
+nav a{font-size:14px;color:var(--mute);margin-left:18px;font-weight:500}
+nav a:hover{color:var(--txt)}
+
+/* Hero */
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.hero-img{width:100%;height:clamp(380px,72vh,640px);object-fit:cover;background:radial-gradient(circle at 30% 30%,#2b2b12,#0d0d0d 70%)}
+.hero-ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,13,13,0) 30%,rgba(13,13,13,.95) 100%);display:flex;align-items:flex-end}
+.hero-ov .wrap{padding-bottom:36px;width:100%}
+.tag{display:inline-block;background:var(--acc);color:var(--acc-txt);font-weight:800;font-size:12px;padding:5px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+.hero h1{font-size:clamp(40px,9vw,84px);max-width:780px}
+.hero h1 em{font-style:normal;color:var(--acc)}
+.hero p.sub{color:var(--mute);margin:14px 0 22px;font-size:16px;max-width:520px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--acc);color:var(--acc-txt);font-weight:800;font-size:16px;padding:16px 26px;border-radius:999px;transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn.block{width:100%}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.rating{margin-top:14px;font-size:14px;color:var(--mute)}
+.rating b{color:var(--acc)}
+
+/* Trust strip */
+.trust{display:flex;gap:10px;overflow-x:auto;padding:16px 0;scrollbar-width:none}
+.trust::-webkit-scrollbar{display:none}
+.trust div{flex:0 0 auto;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;white-space:nowrap}
+
+/* Manifesto */
+.manif{padding:56px 0;text-align:center}
+.manif h2{font-size:clamp(30px,6vw,52px)}
+.manif p{color:var(--mute);max-width:560px;margin:16px auto 0}
+.feats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:30px}
+.feat{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:18px 10px}
+.feat b{display:block;font-family:Anton,Impact,sans-serif;font-size:22px;color:var(--acc)}
+.feat span{font-size:12px;color:var(--mute)}
+
+/* Sections */
+section.step{padding:40px 0;border-top:1px solid var(--line)}
+.step-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.step-h h2{font-size:clamp(26px,5vw,38px)}
+.step-h h2 i{font-style:normal;color:var(--acc)}
+.step-sub{color:var(--mute);font-size:14px;margin-bottom:20px}
+.link{color:var(--acc);font-size:14px;font-weight:600}
+
+/* Sizes */
+.sizes{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.size{border:1.5px solid var(--line);border-radius:12px;padding:14px 4px;text-align:center;background:var(--bg2);transition:all .15s}
+.size b{display:block;font-size:18px}
+.size small{font-size:11px;color:var(--mute)}
+.size.on{border-color:var(--acc);background:var(--acc);color:var(--acc-txt)}
+.size.on small{color:var(--acc-txt)}
+
+/* Packs */
+.packs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pack{position:relative;border:1.5px solid var(--line);border-radius:var(--radius);padding:22px 12px 16px;text-align:center;background:var(--bg2);transition:all .15s}
+.pack.on{border-color:var(--acc);box-shadow:0 0 0 3px rgba(232,255,58,.15)}
+.pack .badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap;text-transform:uppercase}
+.pack.best .badge{background:var(--acc);color:var(--acc-txt)}
+.pack .pn{font-family:Anton,Impact,sans-serif;font-size:24px;text-transform:uppercase}
+.pack .pq{font-size:12px;color:var(--mute)}
+.pack .pu{font-size:28px;font-weight:800;margin-top:10px}
+.pack .pu small{font-size:12px;font-weight:600;color:var(--mute)}
+.pack .pt{font-size:13px;margin-top:4px}
+.pack .pt s{color:var(--mute);margin-right:4px}
+.pack .save{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;color:var(--acc)}
+
+/* Designs */
+.progress{position:sticky;top:58px;z-index:20;background:var(--bg);padding:10px 0;margin-bottom:10px}
+.pbar{height:6px;background:var(--line);border-radius:999px;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:var(--acc);transition:width .25s}
+.ptxt{font-size:13px;color:var(--mute);margin-top:6px}
+.ptxt b{color:var(--txt)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.dcard{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:border-color .15s}
+.dcard.on{border-color:var(--acc)}
+.dimg{position:relative;aspect-ratio:4/5;background:#222}
+.dimg img{width:100%;height:100%;object-fit:cover}
+.dimg .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:repeating-linear-gradient(45deg,#1f1f1f,#1f1f1f 12px,#242424 12px,#242424 24px);font-family:Anton,Impact,sans-serif;font-size:26px;color:#555;text-transform:uppercase}
+.dimg .cnt{position:absolute;top:10px;right:10px;background:var(--acc);color:var(--acc-txt);font-weight:800;font-size:13px;min-width:28px;height:28px;border-radius:999px;display:none;align-items:center;justify-content:center}
+.dcard.on .cnt{display:flex}
+.dbody{padding:12px}
+.dname{font-weight:700;font-size:15px}
+.dsub{font-size:12px;color:var(--mute);margin-bottom:10px}
+.qty{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:999px;padding:4px}
+.qty button{width:36px;height:36px;border-radius:999px;font-size:20px;font-weight:700;background:var(--bg2)}
+.qty button.plus{background:var(--acc);color:var(--acc-txt)}
+.qty button:disabled{opacity:.3;cursor:not-allowed}
+.qty span{font-weight:800}
+
+/* Form */
+.form{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.recap{border-bottom:1px dashed var(--line);padding-bottom:14px;margin-bottom:16px;font-size:14px}
+.recap .row{display:flex;justify-content:space-between;gap:10px;margin:4px 0}
+.recap .row span:first-child{color:var(--mute)}
+.recap .tot{font-size:20px;font-weight:800;margin-top:8px}
+.recap .tot span:last-child{color:var(--acc)}
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 6px}
+input,textarea{width:100%;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:14px;color:var(--txt);font-size:16px;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:var(--acc)}
+input.err{border-color:var(--red)}
+.note{font-size:12px;color:var(--mute);text-align:center;margin-top:10px}
+.msg{display:none;font-size:13px;color:var(--red);margin-top:10px;text-align:center;font-weight:600}
+
+/* FAQ */
+.faq details{border-bottom:1px solid var(--line);padding:16px 0}
+.faq summary{font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px}
+.faq summary::after{content:"+";color:var(--acc);font-size:20px;line-height:1}
+.faq details[open] summary::after{content:"×"}
+.faq p{color:var(--mute);font-size:14px;margin-top:10px}
+
+/* Footer */
+footer{border-top:1px solid var(--line);padding:36px 0 24px;text-align:center;margin-top:30px}
+footer .logo{font-size:34px}
+footer .links{display:flex;justify-content:center;gap:18px;margin:14px 0;font-size:14px;color:var(--mute)}
+footer small{color:#555;font-size:12px}
+
+/* Sticky bar */
+.sticky{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(13,13,13,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 0}
+.sticky .wrap{display:flex;align-items:center;gap:12px}
+.sticky .st{flex:1;min-width:0}
+.sticky .st b{display:block;font-size:15px}
+.sticky .st small{color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.sticky .btn{padding:14px 20px;font-size:15px;flex-shrink:0}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--txt);color:var(--bg);font-weight:700;font-size:14px;padding:12px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:all .25s;z-index:70;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:760px){
+  nav{display:none}
+  .feats{grid-template-columns:repeat(2,1fr)}
+  .sizes{grid-template-columns:repeat(3,1fr)}
+  .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .packs{gap:8px}
+  .pack{padding:20px 6px 14px}
+  .pack .pn{font-size:20px}
+  .pack .pu{font-size:22px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a href="#top" class="logo">PRINTI<span>HA</span></a>
+    <nav>
+      <a href="#designs">Designs</a>
+      <a href="#packs">Packs</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero" id="top">
+  <img class="hero-img" src="hero.webp" alt="T-shirts Printiha imprimés rap marocain" onerror="this.removeAttribute('src')">
+  <div class="hero-ov">
+    <div class="wrap">
+      <span class="tag">Drop 01</span>
+      <h1 class="display">Le rap <em>marocain</em>, en t-shirt.</h1>
+      <p class="sub">Impression DTF sur coton. Trait net, rendu souple, et ça tient au lavage.</p>
+      <a href="#designs" class="btn">Voir les designs →</a>
+      <div class="rating">Trio à 166 DH la pièce · Paiement à la livraison</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="trust">
+    <div>💵 Paiement à la réception</div>
+    <div>🚚 Livraison gratuite</div>
+    <div>🔁 Échange de taille possible</div>
+    <div>🎨 Impression DTF HD</div>
+  </div>
+</div>
+
+<section class="manif">
+  <div class="wrap">
+    <h2 class="display">Des prints propres.<br>Rien de plus.</h2>
+    <p>Chaque design est imprimé en DTF : détails nets, couleurs franches, pas d'effet plastique. Un seul artiste ou plusieurs, c'est toi qui vois.</p>
+    <div class="feats">
+      <div class="feat"><b>DTF</b><span>Impression HD</span></div>
+      <div class="feat"><b>100%</b><span>Coton</span></div>
+      <div class="feat"><b>COD</b><span>Paiement livraison</span></div>
+      <div class="feat"><b>0 DH</b><span>Livraison</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="step" id="taille">
+  <div class="wrap">
+    <div class="step-h">
+      <h2 class="display"><i>1 ·</i> Ta taille</h2>
+      <a href="#faq" class="link">Je ne connais pas ma taille →</a>
+    </div>
+    <p class="step-sub">Choisis selon ton poids. Entre deux tailles, prends la plus grande.</p>
+    <div class="sizes" id="sizes"></div>
+  </div>
+</section>
+
+<section class="step" id="packs">
+  <div class="wrap">
+    <div class="step-h"><h2 class="display"><i>2 ·</i> Ton pack</h2></div>
+    <p class="step-sub">Plus tu en prends, moins tu paies la pièce.</p>
+    <div class="packs" id="packList"></div>
+  </div>
+</section>
+
+<section class="step" id="designs">
+  <div class="wrap">
+    <div class="step-h"><h2 class="display"><i>3 ·</i> Tes designs</h2></div>
+    <p class="step-sub">Ajoute avec +. Le même design peut être pris plusieurs fois.</p>
+    <div class="progress">
+      <div class="pbar"><i id="pbar"></i></div>
+      <div class="ptxt" id="ptxt"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<section class="step" id="commande">
+  <div class="wrap">
+    <div class="step-h"><h2 class="display"><i>4 ·</i> Livraison</h2></div>
+    <p class="step-sub">Paiement à la réception, après vérification.</p>
+    <form class="form" id="orderForm" novalidate>
+      <div class="recap" id="recap"></div>
+      <label for="fNom">Nom complet</label>
+      <input id="fNom" type="text" autocomplete="name" placeholder="Ex : Yassine Benali">
+      <label for="fTel">Téléphone</label>
+      <input id="fTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 XX XX XX XX">
+      <label for="fVille">Ville</label>
+      <input id="fVille" type="text" autocomplete="address-level2" placeholder="Ex : Casablanca">
+      <label for="fAdr">Adresse</label>
+      <textarea id="fAdr" rows="2" autocomplete="street-address" placeholder="Quartier, rue, numéro"></textarea>
+      <div style="margin-top:18px"><button type="submit" class="btn block" id="submitBtn">Confirmer ma commande →</button></div>
+      <div class="msg" id="formMsg"></div>
+      <p class="note">🚚 Livraison gratuite 1 à 3 jours · Paiement à la livraison</p>
+    </form>
+  </div>
+</section>
+
+<section class="step faq" id="faq">
+  <div class="wrap">
+    <div class="step-h"><h2 class="display">Questions fréquentes</h2></div>
+    <details><summary>C'est quoi l'impression DTF ?</summary><p>Le DTF (Direct To Film) est une technique d'impression qui transfère le design sur le tissu avec une colle thermique. Résultat : des détails très nets, des couleurs vives, et une impression souple qui suit le mouvement du t-shirt sans craquer.</p></details>
+    <details><summary>Est-ce que l'impression tient au lavage ?</summary><p>Oui, à condition de laver à 30°C, t-shirt retourné, et de ne pas repasser directement sur l'impression. Évite le sèche-linge pour garder les couleurs intactes le plus longtemps possible.</p></details>
+    <details><summary>Comment choisir ma taille ?</summary><p>Base-toi sur ton poids : S (50 à 60 kg) · M (60 à 70 kg) · L (70 à 80 kg) · XL (80 à 90 kg) · 2XL (90 à 100 kg) · 3XL (100 kg et plus). Entre deux tailles, prends la plus grande.</p></details>
+    <details><summary>Je peux mélanger plusieurs designs ?</summary><p>Oui. Dans un Duo ou un Trio, tu choisis librement tes designs : trois artistes différents ou trois fois le même, c'est toi qui décides.</p></details>
+    <details><summary>Comment se passe le paiement ?</summary><p>Uniquement à la livraison, en espèces. Tu vérifies ta commande avant de payer. Aucune carte bancaire, aucun virement à l'avance.</p></details>
+    <details><summary>Quel est le délai de livraison ?</summary><p>Casablanca : 24h. Grandes villes : 1 à 2 jours. Autres villes : 1 à 3 jours. La livraison est toujours gratuite.</p></details>
+    <details><summary>Et si la taille ne me va pas ?</summary><p>Contacte-nous sur WhatsApp : on organise l'échange. Tu règles uniquement les frais de livraison de l'échange.</p></details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="logo">PRINTI<span style="color:var(--acc)">HA</span></div>
+    <div class="links">
+      <a href="#" id="waFooter">WhatsApp</a>
+      <a href="#" id="igFooter">Instagram</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <small>© 2026 Printiha · Maroc</small>
+  </div>
+</footer>
+
+<div class="sticky">
+  <div class="wrap">
+    <div class="st"><b id="stTitle">Trio · 499 DH</b><small id="stSub">Choisis ta taille pour commencer</small></div>
+    <button class="btn" id="stBtn">Commander →</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==== CONFIG : modifier ici ==== */
+var WA_NUMBER = "212600000000";
+var IG_URL = "https://www.instagram.com/";
+var UNIT_PRICE = 199;
+
+var PACKS = [
+  { n: 1, name: "Single", price: 199, label: "1 pièce" },
+  { n: 2, name: "Duo", price: 359, label: "2 pièces" },
+  { n: 3, name: "Trio", price: 499, label: "3 pièces", badge: "Meilleure valeur", best: true }
+];
+
+var DESIGNS = [
+  { id: "d1", name: "Design 01", sub: "Artiste 01", img: "design1.webp" },
+  { id: "d2", name: "Design 02", sub: "Artiste 02", img: "design2.webp" },
+  { id: "d3", name: "Design 03", sub: "Artiste 03", img: "design3.webp" },
+  { id: "d4", name: "Design 04", sub: "Artiste 04", img: "design4.webp" },
+  { id: "d5", name: "Design 05", sub: "Artiste 05", img: "design5.webp" },
+  { id: "d6", name: "Design 06", sub: "Artiste 06", img: "design6.webp" }
+];
+
+var SIZES = [
+  { s: "S", w: "50-60kg" },
+  { s: "M", w: "60-70kg" },
+  { s: "L", w: "70-80kg" },
+  { s: "XL", w: "80-90kg" },
+  { s: "2XL", w: "90-100kg" },
+  { s: "3XL", w: "100kg+" }
+];
+/* ==== FIN CONFIG ==== */
+
+var state = { size: null, pack: 3, picks: {} };
+
+function $(id) { return document.getElementById(id); }
+function getPack() { return PACKS.filter(function (p) { return p.n === state.pack; })[0]; }
+function totalPicked() {
+  var t = 0;
+  Object.keys(state.picks).forEach(function (k) { t += state.picks[k]; });
+  return t;
+}
+function toast(txt) {
+  var el = $("toast");
+  el.textContent = txt;
+  el.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function () { el.classList.remove("show"); }, 1800);
+}
+
+function renderSizes() {
+  $("sizes").innerHTML = SIZES.map(function (x) {
+    return '<button type="button" class="size' + (state.size === x.s ? " on" : "") + '" data-s="' + x.s + '"><b>' + x.s + '</b><small>' + x.w + '</small></button>';
+  }).join("");
+}
+
+function renderPacks() {
+  $("packList").innerHTML = PACKS.map(function (p) {
+    var full = UNIT_PRICE * p.n;
+    var per = Math.round(p.price / p.n);
+    var save = full - p.price;
+    return '<button type="button" class="pack' + (p.n === state.pack ? " on" : "") + (p.best ? " best" : "") + '" data-n="' + p.n + '">' +
+      (p.badge ? '<span class="badge">' + p.badge + '</span>' : '') +
+      '<div class="pn">' + p.name + '</div>' +
+      '<div class="pq">' + p.label + '</div>' +
+      '<div class="pu">' + per + ' <small>DH/pièce</small></div>' +
+      '<div class="pt">' + (save > 0 ? '<s>' + full + ' DH</s>' : '') + '<b>' + p.price + ' DH</b></div>' +
+      (save > 0 ? '<span class="save">' + save + ' DH de moins</span>' : '') +
+      '</button>';
+  }).join("");
+}
+
+function renderDesigns() {
+  var max = state.pack;
+  var tot = totalPicked();
+  $("grid").innerHTML = DESIGNS.map(function (d) {
+    var q = state.picks[d.id] || 0;
+    return '<div class="dcard' + (q > 0 ? " on" : "") + '">' +
+      '<div class="dimg">' +
+        '<div class="ph">' + d.name + '</div>' +
+        '<img src="' + d.img + '" alt="' + d.name + '" loading="lazy" onerror="this.remove()">' +
+        '<span class="cnt">' + q + '</span>' +
+      '</div>' +
+      '<div class="dbody">' +
+        '<div class="dname">' + d.name + '</div>' +
+        '<div class="dsub">' + d.sub + '</div>' +
+        '<div class="qty">' +
+          '<button type="button" data-id="' + d.id + '" data-op="-1"' + (q === 0 ? " disabled" : "") + '>−</button>' +
+          '<span>' + q + '</span>' +
+          '<button type="button" class="plus" data-id="' + d.id + '" data-op="1"' + (tot >= max ? " disabled" : "") + '>+</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join("");
+}
+
+function renderProgress() {
+  var tot = totalPicked();
+  var max = state.pack;
+  $("pbar").style.width = Math.min(100, (tot / max) * 100) + "%";
+  if (tot >= max) {
+    $("ptxt").innerHTML = '<b>' + tot + '/' + max + '</b> designs choisis · Pack complet ✓';
+  } else {
+    var left = max - tot;
+    $("ptxt").innerHTML = '<b>' + tot + '/' + max + '</b> designs choisis · Encore ' + left + ' à choisir';
+  }
+}
+
+function pickedList() {
+  return DESIGNS.filter(function (d) { return state.picks[d.id] > 0; }).map(function (d) {
+    return state.picks[d.id] + " x " + d.name;
+  });
+}
+
+function renderRecap() {
+  var p = getPack();
+  var list = pickedList();
+  $("recap").innerHTML =
+    '<div class="row"><span>Pack</span><span>' + p.name + ' (' + p.label + ')</span></div>' +
+    '<div class="row"><span>Taille</span><span>' + (state.size || "À choisir") + '</span></div>' +
+    '<div class="row"><span>Designs</span><span style="text-align:right">' + (list.length ? list.join("<br>") : "À choisir") + '</span></div>' +
+    '<div class="row"><span>Livraison</span><span>Gratuite</span></div>' +
+    '<div class="row tot"><span>Total</span><span>' + p.price + ' DH</span></div>';
+}
+
+function nextStep() {
+  if (!state.size) return { txt: "Choisis ta taille pour commencer", btn: "Choisir ma taille", target: "taille" };
+  var left = state.pack - totalPicked();
+  if (left > 0) return { txt: "Encore " + left + " design" + (left > 1 ? "s" : "") + " à choisir", btn: "Mes designs", target: "designs" };
+  return { txt: "Taille " + state.size + " · " + pickedList().join(", "), btn: "Commander →", target: "commande" };
+}
+
+function renderSticky() {
+  var p = getPack();
+  var n = nextStep();
+  $("stTitle").textContent = p.name + " · " + p.price + " DH";
+  $("stSub").textContent = n.txt;
+  $("stBtn").textContent = n.btn;
+}
+
+function renderAll() {
+  renderSizes();
+  renderPacks();
+  renderDesigns();
+  renderProgress();
+  renderRecap();
+  renderSticky();
+}
+
+function trimPicks() {
+  var over = totalPicked() - state.pack;
+  if (over <= 0) return;
+  var ids = Object.keys(state.picks).reverse();
+  for (var i = 0; i < ids.length && over > 0; i++) {
+    var id = ids[i];
+    var take = Math.min(state.picks[id], over);
+    state.picks[id] -= take;
+    over -= take;
+    if (state.picks[id] === 0) delete state.picks[id];
+  }
+}
+
+$("sizes").addEventListener("click", function (e) {
+  var b = e.target.closest(".size");
+  if (!b) return;
+  state.size = b.getAttribute("data-s");
+  renderAll();
+  toast("Taille " + state.size + " sélectionnée");
+});
+
+$("packList").addEventListener("click", function (e) {
+  var b = e.target.closest(".pack");
+  if (!b) return;
+  state.pack = parseInt(b.getAttribute("data-n"), 10);
+  trimPicks();
+  renderAll();
+});
+
+$("grid").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-id]");
+  if (!b || b.disabled) return;
+  var id = b.getAttribute("data-id");
+  var op = parseInt(b.getAttribute("data-op"), 10);
+  var cur = state.picks[id] || 0;
+  if (op > 0 && totalPicked() >= state.pack) {
+    toast("Pack complet. Change de pack pour en ajouter.");
+    return;
+  }
+  cur += op;
+  if (cur <= 0) delete state.picks[id]; else state.picks[id] = cur;
+  renderAll();
+  if (op > 0 && totalPicked() === state.pack) toast("Pack complet ✓");
+});
+
+$("stBtn").addEventListener("click", function () {
+  var n = nextStep();
+  $(n.target).scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+$("orderForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var msg = $("formMsg");
+  msg.style.display = "none";
+  var fields = ["fNom", "fTel", "fVille", "fAdr"];
+  fields.forEach(function (f) { $(f).classList.remove("err"); });
+
+  if (!state.size) { msg.textContent = "Choisis ta taille."; msg.style.display = "block"; $("taille").scrollIntoView({ behavior: "smooth" }); return; }
+  var left = state.pack - totalPicked();
+  if (left > 0) { msg.textContent = "Il te reste " + left + " design" + (left > 1 ? "s" : "") + " à choisir."; msg.style.display = "block"; $("designs").scrollIntoView({ behavior: "smooth" }); return; }
+
+  var nom = $("fNom").value.trim();
+  var tel = $("fTel").value.replace(/\s+/g, "");
+  var ville = $("fVille").value.trim();
+  var adr = $("fAdr").value.trim();
+  var bad = false;
+  if (nom.length < 3) { $("fNom").classList.add("err"); bad = true; }
+  if (!/^(\+212|0)[5-7]\d{8}$/.test(tel)) { $("fTel").classList.add("err"); bad = true; }
+  if (ville.length < 2) { $("fVille").classList.add("err"); bad = true; }
+  if (adr.length < 4) { $("fAdr").classList.add("err"); bad = true; }
+  if (bad) { msg.textContent = "Vérifie les champs en rouge."; msg.style.display = "block"; return; }
+
+  var p = getPack();
+  var text = "Nouvelle commande Printiha\n\n" +
+    "Pack : " + p.name + " (" + p.label + ")\n" +
+    "Taille : " + state.size + "\n" +
+    "Designs : " + pickedList().join(", ") + "\n" +
+    "Total : " + p.price + " DH (paiement à la livraison)\n\n" +
+    "Nom : " + nom + "\n" +
+    "Téléphone : " + tel + "\n" +
+    "Ville : " + ville + "\n" +
+    "Adresse : " + adr;
+
+  window.location.href = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text);
+});
+
+$("waFooter").href = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent("Salut Printiha 👋 J'ai une question.");
+$("igFooter").href = IG_URL;
+
+renderAll();
+</script>
+</body>
+</html>
