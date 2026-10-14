@@ -51,6 +51,13 @@
     #pi-editor-panel input[type=number]{width:68px;min-width:0;padding:7px 5px;background:#ffffff;
       color:#0d0d0d;border:1px solid #0d0d0d;border-radius:6px;font:700 12px Inter,system-ui,sans-serif}
     #pi-editor-panel .pi-mini{font-size:11px;font-weight:700}
+    #pi-editor-panel .pi-color-row{gap:7px}
+    #pi-editor-panel button.pi-color-swatch{width:26px;height:26px;min-width:26px;padding:0;
+      border:1px solid #0d0d0d;border-radius:5px;flex:0 0 26px}
+    #pi-editor-panel button.pi-color-swatch.pi-color-active{outline:2px solid #ff0000;outline-offset:2px}
+    #pi-editor-panel input[type=color]{width:36px;height:30px;min-width:36px;padding:2px;
+      border:1px solid #0d0d0d;border-radius:6px;background:#ffffff;cursor:pointer;flex:0 0 36px}
+    #pi-editor-panel button.pi-color-reset{padding:6px 7px;font-size:10px}
     #pi-editor-panel .pi-section{border-top:1px solid #0d0d0d;padding-top:10px;margin-top:12px}
     #pi-editor-overlay{position:fixed;z-index:109;border:2px dashed #ff0000;box-sizing:border-box;
       pointer-events:none;display:block}
@@ -98,6 +105,31 @@
   function currentDevice() { return window.matchMedia('(max-width:760px)').matches ? 'mobile' : 'desktop'; }
   function isDirty() { return JSON.stringify(rules) !== savedJSON; }
   function esc(s) { return String(s).replace(/[&<>"']/g, x => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x])); }
+  function validHex(value) {
+    return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value);
+  }
+  function hexFromComputed(value, fallback) {
+    if (validHex(value)) return value.toLowerCase();
+    const rgb = String(value || '').match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
+    if (!rgb) return fallback;
+    return '#' + rgb.slice(1,4).map(n => Math.min(255,Number(n)).toString(16).padStart(2,'0')).join('');
+  }
+  function colorRow(label, key, chosen, computed) {
+    const current = validHex(chosen) ? chosen.toLowerCase() : '';
+    const value = current || hexFromComputed(computed, key === 'bgColor' ? '#ffffff' : '#0d0d0d');
+    const colors = [['#0d0d0d','Black'],['#ffffff','White'],['#ff0000','Red']];
+    return '<div class="pi-row pi-color-row">' +
+      '<span class="pi-label">' + label + '</span>' +
+      colors.map(([hex,name]) =>
+        '<button type="button" class="pi-color-swatch' + (current === hex ? ' pi-color-active' : '') +
+        '" style="background-color:' + hex + '" data-color-key="' + key + '" data-color-value="' + hex +
+        '" title="' + name + '" aria-label="Set ' + label.toLowerCase() + ' to ' + name + '"></button>'
+      ).join('') +
+      '<input type="color" data-color-picker="' + key + '" value="' + value +
+      '" title="Choose custom ' + label.toLowerCase() + ' color" aria-label="Custom ' + label.toLowerCase() + ' color">' +
+      '<button type="button" class="pi-color-reset" data-color-reset="' + key +
+      '"' + (!current ? ' disabled' : '') + '>Reset</button></div>';
+  }
   function getRule(selector, create) {
     let r = rules.find(x => x.selector === selector);
     if (!r && create) { r = { selector }; rules.push(r); }
@@ -154,6 +186,9 @@
       }
     }
     if (s.font) d.push('font-size:' + s.font + 'px!important');
+    if (validHex(s.textColor)) d.push('color:' + s.textColor + '!important');
+    if (validHex(s.bgColor)) d.push('background-color:' + s.bgColor + '!important');
+    if (validHex(s.borderColor)) d.push('border-color:' + s.borderColor + '!important');
     return d.join(';');
   }
   function compile() {
@@ -268,6 +303,10 @@
         '<button data-font="-1">−</button>' +
         '<input type="number" data-number="font" min="8" max="250" step="1" value="' + (s.font || baseFont) + '" aria-label="Font size in pixels">' +
         '<button data-font="1">+</button></div>' : '') +
+      '<div class="pi-section"><b>COLORS</b> — choose a swatch or custom color</div>' +
+      colorRow('Text', 'textColor', s.textColor, computed.color) +
+      colorRow('Background', 'bgColor', s.bgColor, computed.backgroundColor) +
+      colorRow('Border', 'borderColor', s.borderColor, computed.borderTopColor) +
       '<div class="pi-section"><b>OTHER LAYOUT</b></div>' +
       '<div class="pi-row"><span class="pi-label">Align</span>' +
       ['left','center','right'].map(a => '<button data-align="' + a + '" class="' + (s.align === a ? 'pi-on' : '') + '">' + a + '</button>').join('') + '</div>' +
@@ -487,6 +526,16 @@
   panel.addEventListener('click', function (e) {
     e.stopPropagation();
     if (!selected) return;
+    const swatch = e.target.closest('[data-color-key][data-color-value]');
+    if (swatch && validHex(swatch.dataset.colorValue)) {
+      updateSettings(selectorFor(selected),{[swatch.dataset.colorKey]:swatch.dataset.colorValue});
+      return;
+    }
+    const colorReset = e.target.closest('[data-color-reset]');
+    if (colorReset) {
+      updateSettings(selectorFor(selected),{[colorReset.dataset.colorReset]:''});
+      return;
+    }
     const nudge = e.target.closest('[data-nudge]');
     if (nudge) {
       const key = ['left','right'].includes(nudge.dataset.nudge) ? 'x' : 'y';
@@ -530,8 +579,21 @@
       updateSettings(selector,{[key]:Math.max(0,Math.min(120,(s[key] || 0) + amount))});
     }
   });
+  panel.addEventListener('input',function(e){
+    if (!selected) return;
+    const picker = e.target.closest('input[data-color-picker]');
+    if (!picker || !validHex(picker.value)) return;
+    updateSettings(selectorFor(selected),{[picker.dataset.colorPicker]:picker.value.toLowerCase()},true);
+  });
   panel.addEventListener('change',function(e){
     if (!selected) return;
+    const picker = e.target.closest('input[data-color-picker]');
+    if (picker) {
+      if (validHex(picker.value)) {
+        updateSettings(selectorFor(selected),{[picker.dataset.colorPicker]:picker.value.toLowerCase()});
+      }
+      return;
+    }
     const field = e.target.closest('[data-number]');
     if (!field) return;
     const key = field.dataset.number;
