@@ -123,7 +123,6 @@ section.step{padding:40px 0;border-top:1px solid var(--line)}
 .dimg.has-carousel .carousel-dots{display:flex}
 .dimg .carousel-dots button{width:8px;height:8px;min-width:8px;padding:0;border-radius:50%;background:rgba(255,255,255,.5);cursor:pointer}
 .dimg .carousel-dots button.active{background:#ffffff}
-.dimg .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:repeating-linear-gradient(45deg,#0d0d0d,#0d0d0d 12px,#0d0d0d 12px,#0d0d0d 24px);font-family:Anton,Impact,sans-serif;font-size:26px;color:#0d0d0d;text-transform:uppercase}
 .dimg .cnt{position:absolute;z-index:2;top:10px;right:10px;background:var(--acc);color:var(--acc-txt);font-weight:800;font-size:13px;min-width:28px;height:28px;border-radius:999px;display:none;align-items:center;justify-content:center}
 .dcard.on .cnt{display:flex}
 .dbody{padding:12px}
@@ -243,7 +242,6 @@ section.step{scroll-margin-top:78px;border-top-color:#0d0d0d}
 .dcard{background:#ffffff;color:#0d0d0d;border-color:#0d0d0d}
 .dcard.on{border-color:#ff0000}
 .dimg{background:#ffffff}
-.dimg .ph{background:#ffffff;color:#0d0d0d}
 .dimg .cnt{background:#ff0000;color:#ffffff}
 .dsub{color:#0d0d0d}
 .qty{border-color:#0d0d0d;background:#ffffff}
@@ -523,7 +521,6 @@ function renderDesigns() {
     var q = state.picks[d.id] || 0;
     return '<div class="dcard' + (q > 0 ? " on" : "") + '">' +
       '<div class="dimg" data-design="' + d.id + '">' +
-        '<div class="ph">' + escapeProductHtml(d.name) + '</div>' +
         '<img class="dslide active" data-view="back" src="' + d.img + '" alt="' + escapeProductHtml(d.name) + ' — dos" loading="lazy">' +
         '<img class="dslide" data-view="front" src="' + d.img.replace(/\.webp$/i, '-front.webp') + '" alt="' + escapeProductHtml(d.name) + ' — devant" loading="lazy">' +
         '<button type="button" class="carousel-btn prev" data-carousel="prev" aria-label="Photo précédente">‹</button>' +
