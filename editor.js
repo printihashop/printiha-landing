@@ -16,6 +16,7 @@
   const END = '/* PRINTIHA_PERMANENT_LAYOUT_END */';
   let rules = [];
   let savedJSON = '[]';
+  let pageSource = '';
   let active = false;
   let selected = null;
   let busy = false;
@@ -259,8 +260,8 @@
   }
 
   async function initialize() {
-    const html = await getPageSource();
-    rules = parseSavedRules(html);
+    pageSource = await getPageSource();
+    rules = parseSavedRules(pageSource);
     try {
       const local = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
       if (Array.isArray(local)) rules = local;
@@ -304,8 +305,9 @@
     btn.disabled = true;
     btn.textContent = 'Preparing...';
     try {
-      const html = await getPageSource();
-      const updated = applyToSource(html);
+      // Use the source loaded when Edit was clicked so download begins
+      // directly from the Save click (without waiting for another request).
+      const updated = applyToSource(pageSource);
       const blob = new Blob([updated],{type:'text/html;charset=utf-8'});
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
