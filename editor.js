@@ -154,10 +154,11 @@
     if (!orderable()) return;
     const children = Array.from(selected.parentElement.children).filter(editable);
     const device = currentDevice();
+    const originalOrder = children.slice();
     children.sort((a,b) => {
       const ar = getSettings(selectorFor(a),device).order;
       const br = getSettings(selectorFor(b),device).order;
-      return (ar || children.indexOf(a) + 1) - (br || children.indexOf(b) + 1);
+      return (ar || originalOrder.indexOf(a) + 1) - (br || originalOrder.indexOf(b) + 1);
     });
     const idx = children.indexOf(selected);
     const other = idx + direction;
