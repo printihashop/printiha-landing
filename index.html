@@ -304,6 +304,19 @@ footer .links,footer small{color:#ffffff}
   #faq > div:nth-child(1) > details:nth-child(2) > summary:nth-child(1){border-color:#0d0d0d!important}
 }
 /* PRINTIHA_PERMANENT_LAYOUT_END */
+
+/* Optional local product-name editor, visible only with ?editnames=1 */
+#pi-name-editor-toggle{position:fixed;right:16px;bottom:18px;z-index:9998;background:#ff0000;color:#ffffff;border:1px solid #0d0d0d;border-radius:999px;padding:12px 17px;font:700 13px system-ui,sans-serif;box-shadow:0 3px 16px rgba(0,0,0,.25);cursor:pointer}
+#pi-name-editor-panel{position:fixed;right:16px;bottom:74px;z-index:9999;width:min(380px,calc(100vw - 32px));max-height:min(75vh,720px);overflow-y:auto;background:#ffffff;color:#0d0d0d;border:2px solid #0d0d0d;border-radius:12px;padding:16px;box-shadow:0 10px 45px rgba(0,0,0,.3);font:13px system-ui,sans-serif}
+#pi-name-editor-panel[hidden]{display:none!important}
+#pi-name-editor-panel h3{font:800 18px system-ui,sans-serif;margin:0 0 8px;color:#0d0d0d}
+#pi-name-editor-panel p{font-size:12px;line-height:1.5;margin:0 0 12px;color:#333}
+#pi-name-editor-panel .pi-name-row{border-top:1px solid #ddd;padding:10px 0}
+#pi-name-editor-panel .pi-name-row strong{display:block;margin-bottom:7px}
+#pi-name-editor-panel label{display:block;font-size:11px;margin:7px 0 3px;font-weight:700;color:#0d0d0d}
+#pi-name-editor-panel input{display:block;width:100%;padding:9px 10px;border:1px solid #888;border-radius:6px;background:#ffffff;color:#0d0d0d;font:14px system-ui,sans-serif}
+#pi-name-editor-panel button.pi-save-names{display:block;width:100%;margin-top:12px;padding:13px 10px;border-radius:8px;background:#ff0000;color:#ffffff;font:800 13px system-ui,sans-serif;cursor:pointer}
+#pi-name-editor-panel button:disabled{opacity:.55;cursor:wait}
 </style>
 </head>
 <body>
@@ -475,6 +488,11 @@ var state = { size: null, pack: 3, picks: {} };
 var productSlides = {};
 
 function $(id) { return document.getElementById(id); }
+function escapeProductHtml(value) {
+  return String(value).replace(/[&<>"']/g, function(ch) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+  });
+}
 function getPack() { return PACKS.filter(function (p) { return p.n === state.pack; })[0]; }
 function totalPicked() {
   var t = 0;
@@ -518,17 +536,17 @@ function renderDesigns() {
     var q = state.picks[d.id] || 0;
     return '<div class="dcard' + (q > 0 ? " on" : "") + '">' +
       '<div class="dimg" data-design="' + d.id + '">' +
-        '<div class="ph">' + d.name + '</div>' +
-        '<img class="dslide active" data-view="back" src="' + d.img + '" alt="' + d.name + ' — dos" loading="lazy">' +
-        '<img class="dslide" data-view="front" src="' + d.img.replace(/\.webp$/i, '-front.webp') + '" alt="' + d.name + ' — devant" loading="lazy">' +
+        '<div class="ph">' + escapeProductHtml(d.name) + '</div>' +
+        '<img class="dslide active" data-view="back" src="' + d.img + '" alt="' + escapeProductHtml(d.name) + ' — dos" loading="lazy">' +
+        '<img class="dslide" data-view="front" src="' + d.img.replace(/\.webp$/i, '-front.webp') + '" alt="' + escapeProductHtml(d.name) + ' — devant" loading="lazy">' +
         '<button type="button" class="carousel-btn prev" data-carousel="prev" aria-label="Photo précédente">‹</button>' +
         '<button type="button" class="carousel-btn next" data-carousel="next" aria-label="Photo suivante">›</button>' +
         '<div class="carousel-dots"><button type="button" class="active" data-carousel="back" aria-label="Voir le dos"></button><button type="button" data-carousel="front" aria-label="Voir le devant"></button></div>' +
         '<span class="cnt">' + q + '</span>' +
       '</div>' +
       '<div class="dbody">' +
-        '<div class="dname">' + d.name + '</div>' +
-        '<div class="dsub">' + d.sub + '</div>' +
+        '<div class="dname">' + escapeProductHtml(d.name) + '</div>' +
+        '<div class="dsub">' + escapeProductHtml(d.sub) + '</div>' +
         '<div class="qty">' +
           '<button type="button" data-id="' + d.id + '" data-op="-1"' + (q === 0 ? " disabled" : "") + '>−</button>' +
           '<span>' + q + '</span>' +
@@ -583,7 +601,7 @@ function renderRecap() {
   $("recap").innerHTML =
     '<div class="row"><span>Pack</span><span>' + p.name + ' (' + p.label + ')</span></div>' +
     '<div class="row"><span>Taille</span><span>' + (state.size || "À choisir") + '</span></div>' +
-    '<div class="row"><span>Designs</span><span style="text-align:right">' + (list.length ? list.join("<br>") : "À choisir") + '</span></div>' +
+    '<div class="row"><span>Designs</span><span style="text-align:right">' + (list.length ? list.map(escapeProductHtml).join("<br>") : "À choisir") + '</span></div>' +
     '<div class="row"><span>Livraison</span><span>Gratuite</span></div>' +
     '<div class="row tot"><span>Total</span><span>' + p.price + ' DH</span></div>';
 }
@@ -740,6 +758,108 @@ $("waFooter").href = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponen
 $("igFooter").href = IG_URL;
 
 renderAll();
+
+/* Edit product display names without changing live customer data.
+   Save exports a complete index.html to upload to GitHub or send in chat. */
+function initProductNameEditor() {
+  if (new URLSearchParams(window.location.search).get("editnames") !== "1") return;
+  var toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.id = "pi-name-editor-toggle";
+  toggle.textContent = "Edit product names";
+  var panel = document.createElement("section");
+  panel.id = "pi-name-editor-panel";
+  panel.hidden = true;
+  panel.setAttribute("aria-label", "Product name editor");
+  panel.innerHTML = '<h3>Product names</h3>' +
+    '<p>Edit the title and subtitle of each product. Preview changes here, then save to download the updated index.html. Upload it to GitHub or send it in chat to publish.</p>' +
+    '<div id="pi-name-fields"></div>' +
+    '<button type="button" class="pi-save-names">Save names — download index.html</button>';
+  document.body.appendChild(toggle);
+  document.body.appendChild(panel);
+  var fields = panel.querySelector("#pi-name-fields");
+  DESIGNS.forEach(function(d, i) {
+    var row = document.createElement("div");
+    row.className = "pi-name-row";
+    var heading = document.createElement("strong");
+    heading.textContent = "Product " + (i + 1) + " · " + d.img;
+    row.appendChild(heading);
+    [["name","Display name"],["sub","Subtitle / color"]].forEach(function(pair) {
+      var label = document.createElement("label");
+      var input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = 100;
+      input.id = "pi-name-" + d.id + "-" + pair[0];
+      input.value = d[pair[0]];
+      input.dataset.designId = d.id;
+      input.dataset.nameField = pair[0];
+      label.htmlFor = input.id;
+      label.textContent = pair[1];
+      row.appendChild(label);
+      row.appendChild(input);
+    });
+    fields.appendChild(row);
+  });
+  toggle.addEventListener("click", function() {
+    panel.hidden = !panel.hidden;
+    toggle.textContent = panel.hidden ? "Edit product names" : "Close name editor";
+  });
+  fields.addEventListener("input", function(e) {
+    var input = e.target;
+    var d = DESIGNS.find(function(item) { return item.id === input.dataset.designId; });
+    if (!d || (input.dataset.nameField !== "name" && input.dataset.nameField !== "sub")) return;
+    d[input.dataset.nameField] = input.value;
+    var card = Array.from($("grid").querySelectorAll(".dimg")).find(function(node) {
+      return node.dataset.design === d.id;
+    });
+    if (card) {
+      var parent = card.closest(".dcard");
+      parent.querySelector(".dname").textContent = d.name;
+      parent.querySelector(".dsub").textContent = d.sub;
+      card.querySelector(".ph").textContent = d.name;
+      card.querySelectorAll(".dslide").forEach(function(img) {
+        img.alt = d.name + (img.dataset.view === "front" ? " — devant" : " — dos");
+      });
+    }
+    renderRecap();
+    renderSticky();
+  });
+  panel.querySelector(".pi-save-names").addEventListener("click", async function() {
+    var saveButton = this;
+    var invalid = DESIGNS.find(function(d) { return !d.name.trim(); });
+    if (invalid) {
+      alert("Every product needs a display name. Check " + invalid.img);
+      return;
+    }
+    saveButton.disabled = true;
+    saveButton.textContent = "Preparing index.html...";
+    try {
+      var response = await fetch(window.location.pathname, { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not load current index.html");
+      var html = await response.text();
+      var config = /var DESIGNS = \[[\s\S]*?\];/;
+      if (!config.test(html)) throw new Error("Product configuration was not found");
+      var safeConfig = JSON.stringify(DESIGNS, null, 2).replace(/</g, "\\u003c");
+      html = html.replace(config, function() { return "var DESIGNS = " + safeConfig + ";"; });
+      var blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      link.href = url;
+      link.download = "index.html";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+      alert("index.html downloaded. Send it in chat or upload it to GitHub to publish your names.");
+    } catch(err) {
+      alert("Could not save product names: " + err.message);
+    } finally {
+      saveButton.disabled = false;
+      saveButton.textContent = "Save names — download index.html";
+    }
+  });
+}
+initProductNameEditor();
 </script>
 </body>
 </html>
