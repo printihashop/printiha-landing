@@ -638,5 +638,13 @@ $("igFooter").href = IG_URL;
 
 renderAll();
 </script>
+<!-- Temporary editor loader. Remove this block after finalizing the layout. -->
+<script>
+if (new URLSearchParams(window.location.search).get('edit') === '1') {
+  var printihaEditor = document.createElement('script');
+  printihaEditor.src = '/editor.js';
+  document.body.appendChild(printihaEditor);
+}
+</script>
 </body>
 </html>
