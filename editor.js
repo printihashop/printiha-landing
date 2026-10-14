@@ -516,7 +516,7 @@
 
   document.addEventListener('click', function (e) {
     if (!active || e.target.closest('#pi-editor-panel,#pi-editor-actions,#pi-editor-overlay')) return;
-    const el = e.target.closest('a,button,img,h1,h2,h3,p,span,b,small,div,section,summary,details,label,input,textarea,footer,header');
+    const el = e.target.closest('a,button,img,h1,h2,h3,h4,h5,h6,p,span,b,strong,em,i,small,div,section,summary,details,label,input,textarea,footer,header');
     if (!el || !editable(el)) return;
     e.preventDefault();
     e.stopImmediatePropagation();
