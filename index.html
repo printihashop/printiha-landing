@@ -1055,6 +1055,61 @@ renderAll();
       '<button type="button" data-editor-tab="products" class="' + (editorTab === 'products' ? 'pi-on' : '') + '">✎ Product Names</button>' +
       '</div>';
   }
+  function scopeButtons() {
+    return '<div class="pi-scope">' +
+      [['shared','Both'],['desktop','Desktop'],['mobile','Mobile']].map(([scope,label]) =>
+        '<button type="button" data-editor-scope="' + scope + '" class="' +
+          (editorScope === scope ? 'pi-on' : '') + '">' + label + '</button>'
+      ).join('') + '</div>';
+  }
+  function textSlot(el) {
+    if (!el || !el.isConnected || ['SCRIPT','STYLE','IMG','INPUT','TEXTAREA','SELECT','SVG','PATH'].includes(el.tagName)) return null;
+    const nodes = Array.from(el.childNodes);
+    const candidates = nodes.map((node,index) => ({node,index})).filter(x => x.node.nodeType === 3);
+    if (candidates.length === 1) return {node:candidates[0].node,index:candidates[0].index,value:candidates[0].node.nodeValue};
+    const meaningful = candidates.filter(x => x.node.nodeValue.trim().length);
+    if (meaningful.length !== 1) return null;
+    return {node:meaningful[0].node,index:meaningful[0].index,value:meaningful[0].node.nodeValue};
+  }
+  function productField(el) {
+    if (!el || !el.matches('.dname,.dsub')) return null;
+    const card = el.closest('.dcard');
+    const image = card && card.querySelector('.dimg[data-design]');
+    const product = DESIGNS.find(d => image && d.id === image.dataset.design);
+    return product ? {product,field:el.matches('.dname') ? 'name' : 'sub'} : null;
+  }
+  function updateElementText(el,value) {
+    if (!el || !el.isConnected) return;
+    const binding = productField(el);
+    if (binding) {
+      binding.product[binding.field] = value;
+      if (binding.field === 'name') {
+        const card = el.closest('.dcard');
+        if (card) card.querySelectorAll('.dslide').forEach(img => {
+          img.alt = value + (img.dataset.view === 'front' ? ' — devant' : ' — dos');
+        });
+        renderRecap();
+        renderSticky();
+      }
+    } else {
+      const slot = textSlot(el);
+      if (!slot) return;
+      const selector = selectorFor(el);
+      let entry = textEdits.find(item => item.selector === selector && item.nodeIndex === slot.index);
+      if (!entry) {
+        entry = {selector,nodeIndex:slot.index,text:value};
+        textEdits.push(entry);
+      } else entry.text = value;
+    }
+    let slot = textSlot(el);
+    if (!slot && !el.children.length) {
+      el.appendChild(document.createTextNode(''));
+      slot = textSlot(el);
+    }
+    if (slot && slot.node.nodeValue !== value) slot.node.nodeValue = value;
+    renderPreview();
+  }
+
   function productFields() {
     return '<div class="pi-title">Edit all 6 product names</div>' +
       '<p class="pi-help">Names update immediately on this page. One Save downloads the layout and names together.</p>' +
@@ -1081,9 +1136,9 @@ renderAll();
       return;
     }
     if (!selected) {
-      panel.innerHTML = editorTabs() + '<div class="pi-title">PRINTIHA Layout Editor</div>' +
-        '<div class="pi-device">Editing: ' + currentDevice().toUpperCase() + '</div>' +
-        '<p>Click any text, image, card or button to select it.</p>' +
+      panel.innerHTML = editorTabs() + scopeButtons() + '<div class="pi-title">PRINTIHA Page Editor</div>' +
+        '<div class="pi-device">Editing: ' + (editorScope === 'shared' ? 'BOTH SCREENS' : editorScope.toUpperCase()) + '</div>' +
+        '<p>Click any text, image, card or button. Edit its words, colors, position and size in this same panel.</p>' +
         '<p class="pi-help">Drag the red ✥ handle to move in any direction. Drag ↘ to resize. Save downloads index.html; send it here to publish.</p>';
       return;
     }
@@ -1094,10 +1149,14 @@ renderAll();
     const dims = selected.getBoundingClientRect();
     const computed = window.getComputedStyle(selected);
     const baseFont = Math.round(parseFloat(computed.fontSize)) || 16;
-    panel.innerHTML = editorTabs() +
-      '<div class="pi-title">PRINTIHA Free Layout Editor</div>' +
-      '<div class="pi-device">Editing: ' + currentDevice().toUpperCase() + '</div>' +
+    const slot = textSlot(selected);
+    panel.innerHTML = editorTabs() + scopeButtons() +
+      '<div class="pi-title">PRINTIHA Page Editor</div>' +
+      '<div class="pi-device">Editing: ' + (editorScope === 'shared' ? 'BOTH SCREENS' : editorScope.toUpperCase()) + '</div>' +
       '<div class="pi-target"><b>Selected:</b> ' + esc(label) + '</div>' +
+      (slot ? '<div class="pi-section"><b>TEXT / NAME</b> — edit selected text</div>' +
+        '<textarea id="pi-element-text" maxlength="500" rows="2" aria-label="Edit selected text">' + esc(slot.value) + '</textarea>' +
+        '<p class="pi-help">Updates live. Double-click simple text to edit directly on the page.</p>' : '') +
       '<div class="pi-section"><b>MOVE FREELY</b> — drag ✥ on the element</div>' +
       '<div class="pi-row"><span class="pi-label">X / Y (px)</span>' +
       '<input type="number" data-number="x" min="-5000" max="5000" step="1" value="' + (s.x || 0) + '" aria-label="Horizontal position">' +
@@ -1136,7 +1195,7 @@ renderAll();
       '<button data-action="position-reset">Reset position</button>' +
       '<button data-action="size-reset">Reset size</button>' +
       '<button data-action="reset">Reset all</button></div>' +
-      '<p class="pi-help">Edits apply to desktop and mobile. Free movement may overlap nearby content, so check both widths before saving. Save downloads index.html.</p>';
+      '<p class="pi-help">Choose Both, Desktop or Mobile above. Visual text edits do not change pricing or checkout calculations. Save downloads one index.html.</p>';
   }
 
   function textLike(el) {
@@ -1345,19 +1404,54 @@ renderAll();
   document.getElementById('pi-save-btn').addEventListener('click', save);
 
   document.addEventListener('click', function (e) {
-    if (!active || editorTab !== 'layout' || e.target.closest('#pi-editor-panel,#pi-editor-actions,#pi-editor-overlay')) return;
-    const el = e.target.closest('a,button,img,h1,h2,h3,p,span,b,small,div,section,summary,details,label,input,textarea,footer,header');
+    if (!active || editorTab !== 'layout' || e.target.closest('[data-pi-inline-edit="1"]') || e.target.closest('#pi-editor-panel,#pi-editor-actions,#pi-editor-overlay')) return;
+    const el = e.target.closest('a,button,img,h1,h2,h3,h4,h5,h6,p,span,b,strong,em,i,small,li,div,section,summary,details,label,input,textarea,footer,header');
     if (!el || !editable(el)) return;
     e.preventDefault();
     e.stopImmediatePropagation();
     select(el);
   }, true);
 
+  document.addEventListener('dblclick',function(e){
+    if (!active || editorTab !== 'layout' || e.target.closest('#pi-editor-panel,#pi-editor-actions,#pi-editor-overlay')) return;
+    const el = e.target.closest('.dname,.dsub,h1,h2,h3,h4,h5,h6,p,span,b,strong,em,small,div');
+    if (!editable(el)) return;
+    select(el);
+    if (!textSlot(el) || el.children.length || el.closest('a,button,form')) {
+      const field = panel.querySelector('#pi-element-text');
+      if (field) field.focus();
+      return;
+    }
+    el.setAttribute('contenteditable','true');
+    el.setAttribute('data-pi-inline-edit','1');
+    el.focus();
+    const selection = window.getSelection();
+    if (selection) selection.selectAllChildren(el);
+  },true);
+  document.addEventListener('focusout',function(e){
+    const el = e.target.closest('[data-pi-inline-edit="1"]');
+    if (!el) return;
+    const value = el.textContent;
+    el.removeAttribute('contenteditable');
+    el.removeAttribute('data-pi-inline-edit');
+    if (el.children.length === 0) {
+      el.textContent = value;
+      updateElementText(el,value);
+    }
+    if (selected === el) renderPanel();
+  },true);
+
   panel.addEventListener('click', function (e) {
     e.stopPropagation();
     const tab = e.target.closest('[data-editor-tab]');
     if (tab) {
       editorTab = tab.dataset.editorTab;
+      renderPanel();
+      return;
+    }
+    const scope = e.target.closest('[data-editor-scope]');
+    if (scope) {
+      editorScope = scope.dataset.editorScope;
       renderPanel();
       return;
     }
@@ -1416,6 +1510,10 @@ renderAll();
     }
   });
   panel.addEventListener('input',function(e){
+    if (e.target.id === 'pi-element-text' && selected && editorTab === 'layout') {
+      updateElementText(selected,e.target.value);
+      return;
+    }
     const productInput = e.target.closest('input[data-product-id][data-product-field]');
     if (productInput) {
       const d = DESIGNS.find(item => item.id === productInput.dataset.productId);
