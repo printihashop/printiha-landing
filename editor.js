@@ -1,6 +1,8 @@
-/* PRINTIHA TEMPORARY STRUCTURED VISUAL EDITOR
- * Open ?edit=1. Remove this file and the loader when layout is finalized.
- * Saved layout CSS is independent of this editor.
+/* PRINTIHA TEMPORARY STRUCTURED VISUAL EDITOR — NO PASSWORD / LOCAL EXPORT
+ * Open ?edit=1. Edit the layout, then Save to download index.html.
+ * Send the downloaded file to the assistant to publish it to GitHub.
+ * Remove this file and the loader after finalizing the layout.
+ * Permanent CSS saved in index.html remains independent of the editor.
  */
 (function () {
   'use strict';
@@ -9,8 +11,9 @@
   const HEADER = document.querySelector('header .wrap');
   if (!HEADER) return;
 
-  let password = '';
-  let sha = '';
+  const DRAFT_KEY = 'printiha-temporary-layout-draft-v1';
+  const START = '/* PRINTIHA_PERMANENT_LAYOUT_START */';
+  const END = '/* PRINTIHA_PERMANENT_LAYOUT_END */';
   let rules = [];
   let savedJSON = '[]';
   let active = false;
@@ -186,7 +189,7 @@
       panel.innerHTML = '<div class="pi-title">PRINTIHA Layout Editor</div>' +
         '<div class="pi-device">Editing: ' + currentDevice().toUpperCase() + '</div>' +
         '<p>Click any text, image, card or button on the page to select it.</p>' +
-        '<p class="pi-help">Adjust spacing, alignment and width. In grids and rows, use Earlier / Later to reorder. Save publishes permanent CSS to GitHub.</p>';
+        '<p class="pi-help">Adjust spacing, alignment and width. In grids and rows, use Earlier / Later to reorder. Save downloads index.html; send that file to publish on GitHub.</p>';
       return;
     }
     const selector = selectorFor(selected);
@@ -213,19 +216,59 @@
       '<button data-action="later"' + (!orderable() ? ' disabled' : '') + '>↓ Later</button></div>' +
       '<div class="pi-row"><button data-action="parent">Select parent</button>' +
       '<button data-action="reset">Reset this element</button></div>' +
-      '<p class="pi-help">Changes are previewed immediately, but only Save publishes them. Layout is saved separately for mobile and desktop.</p>';
+      '<p class="pi-help">Changes are previewed immediately. Save downloads index.html and keeps a local draft. Send the file to publish it. Mobile and desktop are saved separately.</p>';
   }
-  async function request(payload) {
-    const resp = await fetch('/api/editor', {
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(Object.assign({password},payload)),
-      credentials:'same-origin',
-      cache:'no-store'
+  // A permanent layout block can be removed from the final page's editor code
+  // without losing the user's saved design.
+  function parseSavedRules(html) {
+    const match = html.match(/\/\* PRINTIHA_LAYOUT_JSON_BASE64:([A-Za-z0-9+/=]+) \*\//);
+    if (!match) return [];
+    try {
+      const parsed = JSON.parse(atob(match[1]));
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) { return []; }
+  }
+
+  function applyToSource(html) {
+    if (!html.includes('<style>') || !html.includes('</style>')) {
+      throw new Error('index.html has no stylesheet.');
+    }
+    const block = START + '\n/* PRINTIHA_LAYOUT_JSON_BASE64:' +
+      btoa(JSON.stringify(rules)) + ' */\n' + compile() + '\n' + END;
+    const begin = html.indexOf(START);
+    const end = html.indexOf(END);
+    if ((begin === -1) !== (end === -1)) {
+      throw new Error('The saved layout markers are incomplete.');
+    }
+    if (begin !== -1) {
+      return html.slice(0,begin) + block + html.slice(end + END.length);
+    }
+    return html.replace('</style>', '\n' + block + '\n</style>');
+  }
+
+  async function getPageSource() {
+    const response = await fetch(window.location.pathname, {
+      method:'GET',cache:'no-store',credentials:'same-origin'
     });
-    const data = await resp.json().catch(() => ({}));
-    if (!resp.ok) throw new Error(data.error || 'Editor request failed (' + resp.status + ')');
-    return data;
+    if (!response.ok) throw new Error('Could not read the website source.');
+    const html = await response.text();
+    if (!/^\s*<!doctype html>/i.test(html) || !html.includes('PRINTIHA')) {
+      throw new Error('The downloaded source does not look like PRINTIHA index.html.');
+    }
+    return html;
   }
+
+  async function initialize() {
+    const html = await getPageSource();
+    rules = parseSavedRules(html);
+    try {
+      const local = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+      if (Array.isArray(local)) rules = local;
+    } catch (_) { /* Local storage is optional. */ }
+    savedJSON = JSON.stringify(rules);
+    renderPreview();
+  }
+
   async function edit() {
     if (busy) return;
     if (active) {
@@ -236,43 +279,49 @@
       document.getElementById('pi-edit-btn').textContent = 'Edit';
       return;
     }
-    if (!password) {
-      password = window.prompt('PRINTIHA editor password (stored only in memory):') || '';
-      if (!password) return;
-    }
     busy = true;
     try {
-      if (!sha) {
-        const data = await request({action:'load'});
-        sha = data.sha;
-        rules = data.rules || [];
-        savedJSON = JSON.stringify(rules);
-        renderPreview();
+      if (!edit.initialized) {
+        await initialize();
+        edit.initialized = true;
       }
       active = true;
       document.getElementById('pi-edit-btn').textContent = 'Stop editing';
       renderPanel();
     } catch (e) {
-      password = '';
       window.alert(e.message);
     } finally { busy = false; }
   }
+
   async function save() {
     if (busy) return;
-    if (!sha) { await edit(); if (!sha) return; }
-    if (!isDirty()) { window.alert('No unsaved layout changes.'); return; }
+    if (!edit.initialized) {
+      await edit();
+      if (!edit.initialized) return;
+    }
     busy = true;
     const btn = document.getElementById('pi-save-btn');
     btn.disabled = true;
-    btn.textContent = 'Saving...';
+    btn.textContent = 'Preparing...';
     try {
-      const data = await request({action:'save',sha,rules});
-      sha = data.sha;
+      const html = await getPageSource();
+      const updated = applyToSource(html);
+      const blob = new Blob([updated],{type:'text/html;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'index.html';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 15000);
+      try { localStorage.setItem(DRAFT_KEY,JSON.stringify(rules)); } catch (_) { /* Optional */ }
       savedJSON = JSON.stringify(rules);
       renderPreview();
-      window.alert('Saved to GitHub! Vercel will deploy the new layout automatically.');
+      window.alert('index.html downloaded. Send the file in this chat to publish the layout on GitHub. Save does not change the live website yet.');
     } catch (e) {
-      window.alert('Not saved: ' + e.message);
+      window.alert('Could not download index.html: ' + e.message);
     } finally {
       busy = false;
       btn.disabled = false;
