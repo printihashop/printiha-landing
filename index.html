@@ -746,6 +746,30 @@ renderAll();
 
 </script>
 
+<!-- PRINTIHA_TEXT_OVERRIDES_RUNTIME_START -->
+<script>
+(function(){
+  'use strict';
+  var edits = /* PRINTIHA_TEXT_OVERRIDES_DATA_START */[]/* PRINTIHA_TEXT_OVERRIDES_DATA_END */;
+  window.__printihaTextEdits = edits;
+  window.__printihaApplyTextEdits = function(){
+    edits.forEach(function(item){
+      var el;
+      try { el = document.querySelector(item.selector); } catch (_) { return; }
+      if (!el || el.hasAttribute('data-pi-inline-edit')) return;
+      var node = el.childNodes[item.nodeIndex];
+      if (node && node.nodeType === 3 && node.nodeValue !== item.text) node.nodeValue = item.text;
+    });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',window.__printihaApplyTextEdits,{once:true});
+  else window.__printihaApplyTextEdits();
+  var observer = new MutationObserver(function(records){
+    if (records.some(function(m){return m.type === 'childList';})) window.__printihaApplyTextEdits();
+  });
+  observer.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+<!-- PRINTIHA_TEXT_OVERRIDES_RUNTIME_END -->
 <script>
 /* PRINTIHA UNIFIED VISUAL + PRODUCT EDITOR
  * Open ?edit=1. Layout and Product Names share a single Save download.
@@ -758,13 +782,16 @@ renderAll();
   const HEADER = document.querySelector('header .wrap');
   if (!HEADER) return;
 
-  const DRAFT_KEY = 'printiha-unified-editor-v1';
-  const START = '/* PRINTIHA_PERMANENT_LAYOUT_START */';
-  const END = '/* PRINTIHA_PERMANENT_LAYOUT_END */';
+  const DRAFT_KEY = 'printiha-all-in-one-v2';
+  const START = '/* PRINTIHA_UNIFIED_LAYOUT_START */';
+  const END = '/* PRINTIHA_UNIFIED_LAYOUT_END */';
   let rules = [];
   let savedJSON = '[]';
   let savedNamesJSON = JSON.stringify(DESIGNS);
+  let textEdits = window.__printihaTextEdits || [];
+  let savedTextJSON = JSON.stringify(textEdits);
   let editorTab = 'layout';
+  let editorScope = 'shared';
   let pageSource = '';
   let active = false;
   let selected = null;
@@ -821,6 +848,12 @@ renderAll();
     body.pi-editor-dragging,body.pi-editor-dragging *{user-select:none!important}
     #pi-editor-panel .pi-editor-tabs{display:flex;gap:8px;margin-bottom:12px}
     #pi-editor-panel .pi-editor-tabs button{flex:1;padding:11px 8px;font-size:12px}
+    #pi-editor-panel .pi-scope{display:flex;gap:5px;margin:8px 0 12px}
+    #pi-editor-panel .pi-scope button{flex:1;font-size:11px;padding:9px 5px}
+    #pi-editor-panel #pi-element-text{width:100%;min-height:55px;resize:vertical;
+      padding:9px;border:1px solid #0d0d0d;border-radius:7px;background:#fff;color:#0d0d0d;
+      font:13px Inter,system-ui,sans-serif}
+    [data-pi-inline-edit="1"]{outline:2px solid #ff0000!important;outline-offset:3px;cursor:text!important}
     #pi-editor-panel .pi-product-row{border-top:1px solid #ddd;padding:10px 0}
     #pi-editor-panel .pi-product-row strong{display:block;margin-bottom:7px;font-size:12px}
     #pi-editor-panel .pi-product-row label{display:block;margin:7px 0 4px;font-size:11px;font-weight:800;color:#0d0d0d}
@@ -857,8 +890,8 @@ renderAll();
     '<button type="button" class="pi-editor-handle" id="pi-resize-handle" aria-label="Drag to resize selected element" title="Drag to resize">↘</button>';
   document.body.appendChild(overlay);
 
-  function currentDevice() { return 'shared'; }
-  function isDirty() { return JSON.stringify(rules) !== savedJSON || JSON.stringify(DESIGNS) !== savedNamesJSON; }
+  function currentDevice() { return editorScope; }
+  function isDirty() { return JSON.stringify(rules) !== savedJSON || JSON.stringify(DESIGNS) !== savedNamesJSON || JSON.stringify(textEdits) !== savedTextJSON; }
   function esc(s) { return String(s).replace(/[&<>"']/g, x => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x])); }
   function validHex(value) {
     return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value);
@@ -902,7 +935,7 @@ renderAll();
       if (r[device][k] === undefined || r[device][k] === 'default' || r[device][k] === 0) delete r[device][k];
     });
     if (!Object.keys(r[device]).length) delete r[device];
-    rules = rules.filter(x => x.shared);
+    rules = rules.filter(x => x.shared || x.desktop || x.mobile);
     renderPreview();
     if (!fast) renderPanel();
   }
@@ -947,11 +980,13 @@ renderAll();
     return d.join(';');
   }
   function compile() {
-    // One shared set of visual changes on mobile and desktop.
-    return rules.map(r => {
-      const d = declarations(r.shared, r.selector);
+    const make = device => rules.map(r => {
+      const d = declarations(r[device],r.selector);
       return d ? '  ' + r.selector + '{' + d + '}' : '';
     }).filter(Boolean).join('\n');
+    const both=make('shared'), desktop=make('desktop'), mobile=make('mobile');
+    return [both, desktop ? '@media (min-width:761px){\n' + desktop + '\n}' : '',
+      mobile ? '@media (max-width:760px){\n' + mobile + '\n}' : ''].filter(Boolean).join('\n');
   }
   function renderPreview() {
     preview.textContent = compile();
@@ -1180,11 +1215,11 @@ renderAll();
   // A permanent layout block can be removed from the final page's editor code
   // without losing the user's saved design.
   function parseSavedRules(html) {
-    const match = html.match(/\/\* PRINTIHA_LAYOUT_JSON_BASE64:([A-Za-z0-9+/=]+) \*\//);
+    const match = html.match(/\/\* PRINTIHA_UNIFIED_LAYOUT_JSON_BASE64:([A-Za-z0-9+/=]+) \*\//);
     if (!match) return [];
     try {
       const parsed = JSON.parse(atob(match[1]));
-      return Array.isArray(parsed) ? parsed.map(r => ({selector:r.selector,shared:Object.assign({},r.shared || r.mobile || r.desktop || {})})).filter(r => r.selector && Object.keys(r.shared).length) : [];
+      return Array.isArray(parsed) ? parsed.filter(r => r.selector && (r.shared || r.desktop || r.mobile)) : [];
     } catch (_) { return []; }
   }
 
@@ -1192,7 +1227,7 @@ renderAll();
     if (!html.includes('<style>') || !html.includes('</style>')) {
       throw new Error('index.html has no stylesheet.');
     }
-    const block = START + '\n/* PRINTIHA_LAYOUT_JSON_BASE64:' +
+    const block = START + '\n/* PRINTIHA_UNIFIED_LAYOUT_JSON_BASE64:' +
       btoa(JSON.stringify(rules)) + ' */\n' + compile() + '\n' + END;
     const begin = html.indexOf(START);
     const end = html.indexOf(END);
@@ -1226,6 +1261,7 @@ renderAll();
     } catch (_) { /* Local storage is optional. */ }
     savedJSON = JSON.stringify(rules);
     savedNamesJSON = JSON.stringify(DESIGNS);
+    savedTextJSON = JSON.stringify(textEdits);
     renderPreview();
   }
 
@@ -1275,7 +1311,11 @@ renderAll();
         throw new Error('Product configuration not found in index.html.');
       }
       const safeNames = JSON.stringify(DESIGNS, null, 2).replace(/</g, '\\u003c');
-      const updated = withLayout.replace(configPattern, () => 'var DESIGNS = ' + safeNames + ';');
+      const withProducts = withLayout.replace(configPattern, () => 'var DESIGNS = ' + safeNames + ';');
+      const textMarker = /(\/\* PRINTIHA_TEXT_OVERRIDES_DATA_START \*\/)[\s\S]*?(\/\* PRINTIHA_TEXT_OVERRIDES_DATA_END \*\/)/g;
+      if ([...withProducts.matchAll(textMarker)].length !== 1) throw new Error('Text override marker missing.');
+      const safeText = JSON.stringify(textEdits).replace(/</g,'\\u003c');
+      const updated = withProducts.replace(textMarker,(_,a,b) => a + safeText + b);
       const blob = new Blob([updated],{type:'text/html;charset=utf-8'});
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -1289,8 +1329,9 @@ renderAll();
       try { localStorage.setItem(DRAFT_KEY,JSON.stringify(rules)); } catch (_) { /* Optional */ }
       savedJSON = JSON.stringify(rules);
       savedNamesJSON = JSON.stringify(DESIGNS);
+      savedTextJSON = JSON.stringify(textEdits);
       renderPreview();
-      window.alert('index.html downloaded with layout and product names. Send it in this chat to publish on GitHub. Save does not change the live website yet.');
+      window.alert('index.html downloaded with layout and text changes. Send it here to publish on GitHub.');
     } catch (e) {
       window.alert('Could not download index.html: ' + e.message);
     } finally {
@@ -1363,7 +1404,7 @@ renderAll();
       const r = getRule(selector,false);
       if (r) {
         delete r[currentDevice()];
-        rules = rules.filter(x => x.shared);
+        rules = rules.filter(x => x.shared || x.desktop || x.mobile);
         renderPreview(); renderPanel();
       }
     } else if (action === 'earlier' || action === 'later') {
