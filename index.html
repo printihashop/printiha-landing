@@ -803,6 +803,8 @@ renderAll();
   let selected = null;
   let busy = false;
   let dragSession = null;
+  let mobilePanelExpanded = false;
+  let mobilePanelDock = 'bottom';
 
   const style = document.createElement('style');
   style.id = 'pi-editor-ui-style';
@@ -864,11 +866,26 @@ renderAll();
     #pi-editor-panel .pi-product-row strong{display:block;margin-bottom:7px;font-size:12px}
     #pi-editor-panel .pi-product-row label{display:block;margin:7px 0 4px;font-size:11px;font-weight:800;color:#0d0d0d}
     #pi-editor-panel .pi-product-row input{display:block;width:100%;padding:9px 10px;border:1px solid #777;border-radius:7px;background:#fff;color:#0d0d0d;font:14px Inter,system-ui,sans-serif}
+    #pi-editor-panel .pi-panel-bar{display:none}
     @media(max-width:760px){
       #pi-editor-actions{gap:5px}
       .pi-editor-btn{font-size:11px;padding:8px 9px}
-      #pi-editor-panel{right:10px;left:10px;top:auto;bottom:92px;width:auto;
-        max-width:none;max-height:52vh;padding:12px}
+      #pi-editor-panel{right:9px;left:9px;top:auto;bottom:max(10px,env(safe-area-inset-bottom));width:auto;
+        max-width:none;max-height:42vh;max-height:42dvh;padding:10px;overscroll-behavior:contain;
+        border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.26)}
+      #pi-editor-panel.pi-panel-top{bottom:auto;top:68px}
+      #pi-editor-panel .pi-panel-bar{display:flex;align-items:center;gap:8px;position:sticky;
+        top:-10px;margin:-10px -10px 10px;padding:9px 10px;background:#fff;z-index:2;
+        border-bottom:1px solid #ddd;border-radius:10px 10px 0 0}
+      #pi-editor-panel .pi-panel-caption{font-size:12px;font-weight:800;overflow:hidden;
+        text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+      #pi-editor-panel .pi-panel-bar button{flex:0 0 auto;padding:8px 9px;font-size:12px;min-height:34px}
+      #pi-editor-panel.pi-panel-collapsed{max-height:none;overflow:hidden;padding:0;
+        left:auto;right:9px;width:min(310px,calc(100vw - 18px))}
+      #pi-editor-panel.pi-panel-collapsed > :not(.pi-panel-bar){display:none!important}
+      #pi-editor-panel.pi-panel-collapsed .pi-panel-bar{margin:0;border-bottom:0;
+        border-radius:10px;padding:7px 8px}
+      #pi-editor-panel.pi-panel-collapsed .pi-panel-caption{font-size:11px}
     }
   `;
   document.head.appendChild(style);
@@ -1053,6 +1070,7 @@ renderAll();
     selected = el;
     selected.classList.add('pi-editor-selected');
     updateOverlay();
+    if (window.matchMedia('(max-width:760px)').matches) mobilePanelExpanded = false;
     renderPanel();
   }
   function editorTabs() {
@@ -1138,17 +1156,35 @@ renderAll();
       '<p class="pi-help">Click the red Save button in the header to download index.html, then send it in chat for publishing.</p>';
   }
 
+  function mobilePanelBar() {
+    const raw = selected && selected.isConnected
+      ? (selected.getAttribute('alt') || selected.textContent || selected.tagName).trim()
+      : 'Choose an element';
+    const label = editorTab === 'products' ? 'Product names' : raw.slice(0,38);
+    return '<div class="pi-panel-bar">' +
+      '<span class="pi-panel-caption" title="' + esc(label) + '">' + esc(label) + '</span>' +
+      '<button type="button" data-pi-panel-dock aria-label="Move editor to other side">' +
+        (mobilePanelDock === 'bottom' ? '↑' : '↓') + '</button>' +
+      '<button type="button" data-pi-panel-toggle aria-expanded="' +
+        (mobilePanelExpanded ? 'true' : 'false') + '">' +
+        (mobilePanelExpanded ? 'Hide tools ▾' : 'Edit tools ▴') + '</button>' +
+      '</div>';
+  }
   function renderPanel() {
     if (!active) { panel.hidden = true; overlay.hidden = true; return; }
     panel.hidden = false;
+    const mobile = window.matchMedia('(max-width:760px)').matches;
+    panel.classList.toggle('pi-panel-collapsed',mobile && !mobilePanelExpanded);
+    panel.classList.toggle('pi-panel-top',mobilePanelDock === 'top');
+    const mobileBar = mobilePanelBar();
     updateOverlay();
     if (editorTab === 'products') {
       overlay.hidden = true;
-      panel.innerHTML = editorTabs() + productFields();
+      panel.innerHTML = mobileBar + editorTabs() + productFields();
       return;
     }
     if (!selected) {
-      panel.innerHTML = editorTabs() + scopeButtons() + '<div class="pi-title">PRINTIHA Page Editor</div>' +
+      panel.innerHTML = mobileBar + editorTabs() + scopeButtons() + '<div class="pi-title">PRINTIHA Page Editor</div>' +
         '<div class="pi-device">Editing: ' + (editorScope === 'shared' ? 'BOTH SCREENS' : editorScope.toUpperCase()) + '</div>' +
         '<p>Click any text, image, card or button. Edit its words, colors, position and size in this same panel.</p>' +
         '<p class="pi-help">Drag the red ✥ handle to move in any direction. Drag ↘ to resize. Save downloads index.html; send it here to publish.</p>';
@@ -1162,7 +1198,7 @@ renderAll();
     const computed = window.getComputedStyle(selected);
     const baseFont = Math.round(parseFloat(computed.fontSize)) || 16;
     const slot = textSlot(selected);
-    panel.innerHTML = editorTabs() + scopeButtons() +
+    panel.innerHTML = mobileBar + editorTabs() + scopeButtons() +
       '<div class="pi-title">PRINTIHA Page Editor</div>' +
       '<div class="pi-device">Editing: ' + (editorScope === 'shared' ? 'BOTH SCREENS' : editorScope.toUpperCase()) + '</div>' +
       '<div class="pi-target"><b>Selected:</b> ' + esc(label) + '</div>' +
@@ -1455,6 +1491,22 @@ renderAll();
 
   panel.addEventListener('click', function (e) {
     e.stopPropagation();
+    const toggle = e.target.closest('[data-pi-panel-toggle]');
+    if (toggle) {
+      mobilePanelExpanded = !mobilePanelExpanded;
+      if (mobilePanelExpanded && selected && selected.isConnected) {
+        const rect = selected.getBoundingClientRect();
+        mobilePanelDock = rect.top > window.innerHeight / 2 ? 'top' : 'bottom';
+      }
+      renderPanel();
+      return;
+    }
+    const dock = e.target.closest('[data-pi-panel-dock]');
+    if (dock) {
+      mobilePanelDock = mobilePanelDock === 'top' ? 'bottom' : 'top';
+      renderPanel();
+      return;
+    }
     const tab = e.target.closest('[data-editor-tab]');
     if (tab) {
       editorTab = tab.dataset.editorTab;
