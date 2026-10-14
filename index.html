@@ -862,6 +862,14 @@ renderAll();
       padding:9px;border:1px solid #0d0d0d;border-radius:7px;background:#fff;color:#0d0d0d;
       font:13px Inter,system-ui,sans-serif}
     [data-pi-inline-edit="1"]{outline:2px solid #ff0000!important;outline-offset:3px;cursor:text!important}
+    #pi-editor-panel .pi-visibility-actions{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+    #pi-editor-panel .pi-visibility-actions button{flex:1;min-width:125px;min-height:39px}
+    #pi-editor-panel .pi-visibility-actions .pi-remove{background:#b91c1c;color:#fff;border-color:#b91c1c}
+    #pi-editor-panel .pi-hidden-list{display:grid;gap:7px;margin:9px 0}
+    #pi-editor-panel .pi-hidden-item{display:flex;gap:8px;align-items:center;justify-content:space-between;
+      border:1px solid #ddd;border-radius:8px;padding:7px}
+    #pi-editor-panel .pi-hidden-item span{font-size:11px;line-height:1.35;overflow-wrap:anywhere;min-width:0}
+    #pi-editor-panel .pi-hidden-item button{flex-shrink:0;min-height:35px}
     #pi-editor-panel .pi-product-row{border-top:1px solid #ddd;padding:10px 0}
     #pi-editor-panel .pi-product-row strong{display:block;margin-bottom:7px;font-size:12px}
     #pi-editor-panel .pi-product-row label{display:block;margin:7px 0 4px;font-size:11px;font-weight:800;color:#0d0d0d}
@@ -1000,6 +1008,8 @@ renderAll();
     if (validHex(s.textColor)) d.push('color:' + s.textColor + '!important');
     if (validHex(s.bgColor)) d.push('background-color:' + s.bgColor + '!important');
     if (validHex(s.borderColor)) d.push('border-color:' + s.borderColor + '!important');
+    if (s.visibilityMode === 'hidden') d.push('visibility:hidden!important');
+    if (s.visibilityMode === 'removed') d.push('display:none!important');
     return d.join(';');
   }
   function compile() {
@@ -1011,6 +1021,95 @@ renderAll();
     return [both, desktop ? '@media (min-width:761px){\n' + desktop + '\n}' : '',
       mobile ? '@media (max-width:760px){\n' + mobile + '\n}' : ''].filter(Boolean).join('\n');
   }
+  function setElementVisibility(selector, mode, scope) {
+    const r = getRule(selector,mode !== 'visible');
+    if (!r) return;
+    const devices = ['shared','desktop','mobile'];
+    if (scope === 'shared') {
+      for (const device of devices) {
+        if (!r[device]) continue;
+        delete r[device].visibilityMode;
+        if (!Object.keys(r[device]).length) delete r[device];
+      }
+      if (mode !== 'visible') {
+        r.shared = Object.assign({},r.shared || {},{visibilityMode:mode});
+      }
+    } else {
+      if (r.shared && r.shared.visibilityMode) {
+        const inherited = r.shared.visibilityMode;
+        delete r.shared.visibilityMode;
+        if (!Object.keys(r.shared).length) delete r.shared;
+        for (const device of ['desktop','mobile']) {
+          r[device] = Object.assign({},r[device] || {});
+          if (!r[device].visibilityMode) r[device].visibilityMode = inherited;
+        }
+      }
+      if (mode === 'visible') {
+        if (r[scope]) {
+          delete r[scope].visibilityMode;
+          if (!Object.keys(r[scope]).length) delete r[scope];
+        }
+      } else {
+        r[scope] = Object.assign({},r[scope] || {},{visibilityMode:mode});
+      }
+    }
+    rules = rules.filter(x => x.shared || x.desktop || x.mobile);
+    renderPreview();
+  }
+  function hiddenItemsPanel() {
+    const items = [];
+    rules.forEach(r => {
+      ['shared','desktop','mobile'].forEach(scope => {
+        const mode = r[scope] && r[scope].visibilityMode;
+        if (mode !== 'hidden' && mode !== 'removed') return;
+        let element = null;
+        try { element = document.querySelector(r.selector); } catch (_) {}
+        const name = (r.label || (element && (element.getAttribute('alt') || element.textContent || '').trim()) ||
+          r.selector).slice(0,55);
+        items.push({selector:r.selector,scope,mode,name});
+      });
+    });
+    if (!items.length) return '';
+    return '<div class="pi-section"><b>Hidden / deleted elements (' + items.length + ')</b></div>' +
+      '<div class="pi-hidden-list">' +
+      items.map(item =>
+        '<div class="pi-hidden-item"><span><b>' + esc(item.name) + '</b> · ' +
+        (item.mode === 'removed' ? 'Deleted (no gap)' : 'Hidden (space kept)') + ' · ' +
+        ({shared:'Both',desktop:'Desktop',mobile:'Mobile'}[item.scope]) + '</span>' +
+        '<button type="button" data-pi-restore-selector="' + esc(item.selector) +
+        '" data-pi-restore-scope="' + item.scope + '">Restore</button></div>'
+      ).join('') + '</div>';
+  }
+  function canHideElement(el) {
+    return editable(el) && el !== HEADER && !el.contains(actions) &&
+      !el.contains(panel) && !el.contains(overlay);
+  }
+  function hideSelected(mode) {
+    if (!selected || !canHideElement(selected)) {
+      window.alert('This element contains the editor controls and cannot be hidden.');
+      return;
+    }
+    const element = selected;
+    const selector = selectorFor(element);
+    const descendants = element.querySelectorAll('*').length;
+    const scope = currentDevice();
+    const label = (element.getAttribute('alt') || element.textContent || element.tagName).trim().slice(0,55);
+    const remove = mode === 'removed';
+    const message = (remove ? 'Delete this element from the visible page and close its space?' :
+      'Hide this element but keep its space on the page?') +
+      (descendants ? '\nThis container has ' + descendants + ' nested element(s), which will also be hidden.' : '') +
+      '\nApplies to: ' + ({shared:'Both screens',desktop:'Desktop',mobile:'Mobile'}[scope]) +
+      '\nYou can restore it later from Hidden / deleted elements.';
+    if (!window.confirm(message)) return;
+    const r = getRule(selector,true);
+    r.label = label;
+    element.classList.remove('pi-editor-selected');
+    selected = null;
+    setElementVisibility(selector,mode,scope);
+    if (window.matchMedia('(max-width:760px)').matches) mobilePanelExpanded = true;
+    renderPanel();
+  }
+
   function renderPreview() {
     preview.textContent = compile();
     document.getElementById('pi-save-btn').textContent = isDirty() ? 'Save *' : 'Save';
@@ -1187,7 +1286,8 @@ renderAll();
       panel.innerHTML = mobileBar + editorTabs() + scopeButtons() + '<div class="pi-title">PRINTIHA Page Editor</div>' +
         '<div class="pi-device">Editing: ' + (editorScope === 'shared' ? 'BOTH SCREENS' : editorScope.toUpperCase()) + '</div>' +
         '<p>Click any text, image, card or button. Edit its words, colors, position and size in this same panel.</p>' +
-        '<p class="pi-help">Drag the red ✥ handle to move in any direction. Drag ↘ to resize. Save downloads index.html; send it here to publish.</p>';
+        '<p class="pi-help">Drag the red ✥ handle to move in any direction. Drag ↘ to resize. Save downloads index.html; send it here to publish.</p>' +
+      hiddenItemsPanel();
       return;
     }
     const selector = selectorFor(selected);
@@ -1239,11 +1339,18 @@ renderAll();
       '<div class="pi-row"><span class="pi-label">Reorder</span>' +
       '<button data-action="earlier"' + (!orderable() ? ' disabled' : '') + '>↑ Earlier</button>' +
       '<button data-action="later"' + (!orderable() ? ' disabled' : '') + '>↓ Later</button></div>' +
+      '<div class="pi-section"><b>HIDE / DELETE ELEMENT</b></div>' +
+      '<div class="pi-visibility-actions">' +
+      '<button type="button" data-action="hide-element">Hide (keep space)</button>' +
+      '<button type="button" class="pi-remove" data-action="remove-element">Delete (close gap)</button>' +
+      '</div>' +
+      '<p class="pi-help">Deleting hides this element and everything inside it, without leaving a gap. The original code stays intact so you can restore it.</p>' +
       '<div class="pi-row"><button data-action="parent">Select parent</button>' +
       '<button data-action="position-reset">Reset position</button>' +
       '<button data-action="size-reset">Reset size</button>' +
       '<button data-action="reset">Reset all</button></div>' +
-      '<p class="pi-help">Choose Both, Desktop or Mobile above. Visual text edits do not change pricing or checkout calculations. Save downloads one index.html.</p>';
+      '<p class="pi-help">Choose Both, Desktop or Mobile above. Visual text edits do not change pricing or checkout calculations. Save downloads one index.html.</p>' +
+      hiddenItemsPanel();
   }
 
   function textLike(el) {
@@ -1325,7 +1432,8 @@ renderAll();
     const match = html.match(/\/\* PRINTIHA_UNIFIED_LAYOUT_JSON_BASE64:([A-Za-z0-9+/=]+) \*\//);
     if (!match) return [];
     try {
-      const parsed = JSON.parse(atob(match[1]));
+      const bytes = Uint8Array.from(atob(match[1]),char => char.charCodeAt(0));
+      const parsed = JSON.parse(new TextDecoder().decode(bytes));
       return Array.isArray(parsed) ? parsed.filter(r => r.selector && (r.shared || r.desktop || r.mobile)) : [];
     } catch (_) { return []; }
   }
@@ -1335,7 +1443,8 @@ renderAll();
       throw new Error('index.html has no stylesheet.');
     }
     const block = START + '\n/* PRINTIHA_UNIFIED_LAYOUT_JSON_BASE64:' +
-      btoa(JSON.stringify(rules)) + ' */\n' + compile() + '\n' + END;
+      btoa(Array.from(new TextEncoder().encode(JSON.stringify(rules)), b => String.fromCharCode(b)).join('')) +
+      ' */\n' + compile() + '\n' + END;
     const begin = html.indexOf(START);
     const end = html.indexOf(END);
     if ((begin === -1) !== (end === -1)) {
@@ -1507,6 +1616,12 @@ renderAll();
       renderPanel();
       return;
     }
+    const restore = e.target.closest('[data-pi-restore-selector][data-pi-restore-scope]');
+    if (restore) {
+      setElementVisibility(restore.dataset.piRestoreSelector,'visible',restore.dataset.piRestoreScope);
+      renderPanel();
+      return;
+    }
     const tab = e.target.closest('[data-editor-tab]');
     if (tab) {
       editorTab = tab.dataset.editorTab;
@@ -1550,6 +1665,10 @@ renderAll();
     const button = e.target.closest('[data-action]');
     if (!button) return;
     const action = button.dataset.action;
+    if (action === 'hide-element' || action === 'remove-element') {
+      hideSelected(action === 'remove-element' ? 'removed' : 'hidden');
+      return;
+    }
     const selector = selectorFor(selected);
     const s = getSettings(selector,currentDevice());
     if (action === 'parent') {
