@@ -112,8 +112,17 @@ section.step{padding:40px 0;border-top:1px solid var(--line)}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .dcard{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:border-color .15s}
 .dcard.on{border-color:var(--acc)}
-.dimg{position:relative;aspect-ratio:4/5;background:#0d0d0d}
-.dimg img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover}
+.dimg{position:relative;aspect-ratio:4/5;background:#0d0d0d;touch-action:pan-y}
+.dimg .dslide{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;opacity:0;pointer-events:none;transition:opacity .2s ease}
+.dimg .dslide.active{opacity:1}
+.dimg .carousel-btn{position:absolute;z-index:3;top:50%;transform:translateY(-50%);display:none;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border-radius:50%;background:rgba(255,255,255,.92);color:#0d0d0d;font-size:23px;line-height:1;box-shadow:0 1px 6px rgba(0,0,0,.15);cursor:pointer}
+.dimg.has-carousel .carousel-btn{display:flex}
+.dimg .carousel-btn.prev{left:5px}
+.dimg .carousel-btn.next{right:5px}
+.dimg .carousel-dots{position:absolute;z-index:3;bottom:7px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:7px;padding:6px 9px;border-radius:20px;background:rgba(13,13,13,.65)}
+.dimg.has-carousel .carousel-dots{display:flex}
+.dimg .carousel-dots button{width:8px;height:8px;min-width:8px;padding:0;border-radius:50%;background:rgba(255,255,255,.5);cursor:pointer}
+.dimg .carousel-dots button.active{background:#ffffff}
 .dimg .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:repeating-linear-gradient(45deg,#0d0d0d,#0d0d0d 12px,#0d0d0d 12px,#0d0d0d 24px);font-family:Anton,Impact,sans-serif;font-size:26px;color:#0d0d0d;text-transform:uppercase}
 .dimg .cnt{position:absolute;z-index:2;top:10px;right:10px;background:var(--acc);color:var(--acc-txt);font-weight:800;font-size:13px;min-width:28px;height:28px;border-radius:999px;display:none;align-items:center;justify-content:center}
 .dcard.on .cnt{display:flex}
@@ -463,6 +472,7 @@ var SIZES = [
 /* ==== FIN CONFIG ==== */
 
 var state = { size: null, pack: 3, picks: {} };
+var productSlides = {};
 
 function $(id) { return document.getElementById(id); }
 function getPack() { return PACKS.filter(function (p) { return p.n === state.pack; })[0]; }
@@ -507,9 +517,13 @@ function renderDesigns() {
   $("grid").innerHTML = DESIGNS.map(function (d) {
     var q = state.picks[d.id] || 0;
     return '<div class="dcard' + (q > 0 ? " on" : "") + '">' +
-      '<div class="dimg">' +
+      '<div class="dimg" data-design="' + d.id + '">' +
         '<div class="ph">' + d.name + '</div>' +
-        '<img src="' + d.img + '" alt="' + d.name + '" loading="lazy" onerror="this.remove()">' +
+        '<img class="dslide active" data-view="back" src="' + d.img + '" alt="' + d.name + ' — dos" loading="lazy">' +
+        '<img class="dslide" data-view="front" src="' + d.img.replace(/\.webp$/i, '-front.webp') + '" alt="' + d.name + ' — devant" loading="lazy">' +
+        '<button type="button" class="carousel-btn prev" data-carousel="prev" aria-label="Photo précédente">‹</button>' +
+        '<button type="button" class="carousel-btn next" data-carousel="next" aria-label="Photo suivante">›</button>' +
+        '<div class="carousel-dots"><button type="button" class="active" data-carousel="back" aria-label="Voir le dos"></button><button type="button" data-carousel="front" aria-label="Voir le devant"></button></div>' +
         '<span class="cnt">' + q + '</span>' +
       '</div>' +
       '<div class="dbody">' +
@@ -523,6 +537,26 @@ function renderDesigns() {
       '</div>' +
     '</div>';
   }).join("");
+  $("grid").querySelectorAll(".dimg").forEach(function(card) { showProductSlide(card); });
+}
+
+function showProductSlide(card, requestedView) {
+  if (!card) return;
+  var back = card.querySelector('.dslide[data-view="back"]');
+  var front = card.querySelector('.dslide[data-view="front"]');
+  var backReady = !!(back && back.complete && back.naturalWidth > 0);
+  var frontReady = !!(front && front.complete && front.naturalWidth > 0);
+  var hasBoth = backReady && frontReady;
+  card.classList.toggle("has-carousel", hasBoth);
+  var id = card.getAttribute("data-design");
+  var view = hasBoth ? (requestedView || productSlides[id] || "back") : (backReady ? "back" : frontReady ? "front" : "back");
+  card.querySelectorAll(".dslide").forEach(function(img) {
+    img.classList.toggle("active", img.getAttribute("data-view") === view);
+  });
+  card.querySelectorAll(".carousel-dots button").forEach(function(btn) {
+    btn.classList.toggle("active", btn.getAttribute("data-carousel") === view);
+  });
+  if (hasBoth) productSlides[id] = view;
 }
 
 function renderProgress() {
@@ -607,7 +641,45 @@ $("packList").addEventListener("click", function (e) {
   renderAll();
 });
 
+$("grid").addEventListener("load", function(e) {
+  if (e.target.classList && e.target.classList.contains("dslide")) showProductSlide(e.target.closest(".dimg"));
+}, true);
+$("grid").addEventListener("error", function(e) {
+  if (!e.target.classList || !e.target.classList.contains("dslide")) return;
+  var card = e.target.closest(".dimg");
+  e.target.remove();
+  showProductSlide(card);
+}, true);
+
+var carouselTouch = null;
+$("grid").addEventListener("touchstart", function(e) {
+  var card = e.target.closest(".dimg.has-carousel");
+  if (card && e.touches.length) carouselTouch = { card: card, x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, { passive: true });
+$("grid").addEventListener("touchend", function(e) {
+  if (!carouselTouch || !e.changedTouches.length) return;
+  var start = carouselTouch;
+  carouselTouch = null;
+  var dx = e.changedTouches[0].clientX - start.x;
+  var dy = e.changedTouches[0].clientY - start.y;
+  if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+    showProductSlide(start.card, dx < 0 ? "front" : "back");
+  }
+}, { passive: true });
+$("grid").addEventListener("touchcancel", function() { carouselTouch = null; }, { passive: true });
+
 $("grid").addEventListener("click", function (e) {
+  var slideButton = e.target.closest("button[data-carousel]");
+  if (slideButton) {
+    var card = slideButton.closest(".dimg.has-carousel");
+    if (!card) return;
+    var view = slideButton.getAttribute("data-carousel");
+    if (view === "prev" || view === "next") {
+      view = productSlides[card.getAttribute("data-design")] === "front" ? "back" : "front";
+    }
+    showProductSlide(card, view);
+    return;
+  }
   var b = e.target.closest("button[data-id]");
   if (!b || b.disabled) return;
   var id = b.getAttribute("data-id");
