@@ -870,6 +870,19 @@ renderAll();
       border:1px solid #ddd;border-radius:8px;padding:7px}
     #pi-editor-panel .pi-hidden-item span{font-size:11px;line-height:1.35;overflow-wrap:anywhere;min-width:0}
     #pi-editor-panel .pi-hidden-item button{flex-shrink:0;min-height:35px}
+    #pi-export-panel{position:fixed;right:14px;bottom:14px;z-index:2147483646;
+      width:min(365px,calc(100vw - 28px));padding:16px;border:2px solid #0d0d0d;
+      border-radius:12px;background:#fff;color:#0d0d0d;
+      box-shadow:0 12px 42px rgba(0,0,0,.32);font:13px Inter,system-ui,sans-serif}
+    #pi-export-panel[hidden]{display:none!important}
+    #pi-export-panel .pi-export-title{font-size:16px;font-weight:900;margin:0 0 8px}
+    #pi-export-panel .pi-export-text{font-size:12px;line-height:1.5;margin:0 0 12px}
+    #pi-export-panel .pi-export-link{display:block;text-align:center;text-decoration:none;
+      padding:13px 12px;border-radius:8px;background:#ff0000;color:#fff;font-weight:900;
+      font-size:14px}
+    #pi-export-panel .pi-export-secondary{display:flex;gap:8px;margin-top:8px}
+    #pi-export-panel button{flex:1;padding:9px;border:1px solid #777;border-radius:7px;
+      background:#fff;color:#0d0d0d;font:700 12px Inter,system-ui,sans-serif;cursor:pointer}
     #pi-editor-panel .pi-product-row{border-top:1px solid #ddd;padding:10px 0}
     #pi-editor-panel .pi-product-row strong{display:block;margin-bottom:7px;font-size:12px}
     #pi-editor-panel .pi-product-row label{display:block;margin:7px 0 4px;font-size:11px;font-weight:800;color:#0d0d0d}
@@ -878,6 +891,7 @@ renderAll();
     @media(max-width:760px){
       #pi-editor-actions{gap:5px}
       .pi-editor-btn{font-size:11px;padding:8px 9px}
+      #pi-export-panel{top:70px;bottom:auto;left:9px;right:9px;width:auto}
       #pi-editor-panel{right:9px;left:9px;top:auto;bottom:max(10px,env(safe-area-inset-bottom));width:auto;
         max-width:none;max-height:42vh;max-height:42dvh;padding:10px;overscroll-behavior:contain;
         border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.26)}
@@ -913,6 +927,53 @@ renderAll();
   panel.hidden = true;
   panel.setAttribute('aria-label', 'PRINTIHA visual editor');
   document.body.appendChild(panel);
+
+  // Keep an explicit, user-clickable download link: browsers can silently block
+  // a programmatic Blob download, especially when a JS alert follows immediately.
+  const exportPanel = document.createElement('aside');
+  exportPanel.id = 'pi-export-panel';
+  exportPanel.hidden = true;
+  exportPanel.setAttribute('aria-label','Download edited PRINTIHA page');
+  exportPanel.innerHTML =
+    '<div class="pi-export-title">Your index.html is ready</div>' +
+    '<p class="pi-export-text" id="pi-export-status">Click the download button to save the file.</p>' +
+    '<a class="pi-export-link" id="pi-export-download" download="index.html">⬇ Download index.html</a>' +
+    '<div class="pi-export-secondary">' +
+      '<button type="button" id="pi-export-copy">Copy HTML (backup)</button>' +
+      '<button type="button" id="pi-export-close">Close</button>' +
+    '</div>';
+  document.body.appendChild(exportPanel);
+  let exportUrl = null;
+  let exportHTML = '';
+  function presentExport(html) {
+    if (exportUrl) URL.revokeObjectURL(exportUrl);
+    exportHTML = html;
+    exportUrl = URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));
+    const link = exportPanel.querySelector('#pi-export-download');
+    link.href = exportUrl;
+    link.download = 'index.html';
+    exportPanel.querySelector('#pi-export-status').textContent =
+      'File prepared. Click Download index.html below, or use Copy HTML as a backup.';
+    exportPanel.hidden = false;
+  }
+  exportPanel.addEventListener('click',async function(e){
+    if (e.target.closest('#pi-export-close')) { exportPanel.hidden = true; return; }
+    if (e.target.closest('#pi-export-download')) {
+      exportPanel.querySelector('#pi-export-status').textContent =
+        'Download requested. Check your browser downloads (Ctrl+J). If blocked, use Copy HTML.';
+      return;
+    }
+    if (e.target.closest('#pi-export-copy')) {
+      try {
+        await navigator.clipboard.writeText(exportHTML);
+        exportPanel.querySelector('#pi-export-status').textContent =
+          'HTML copied to clipboard. Paste it into Notepad and save as index.html (UTF-8).';
+      } catch (_) {
+        exportPanel.querySelector('#pi-export-status').textContent =
+          'Clipboard permission was blocked. Try the Download index.html link instead.';
+      }
+    }
+  });
 
   const overlay = document.createElement('div');
   overlay.id = 'pi-editor-overlay';
@@ -1110,8 +1171,20 @@ renderAll();
     renderPanel();
   }
 
+  function persistDraft() {
+    if (!edit.initialized) return;
+    try {
+      localStorage.setItem(DRAFT_KEY,JSON.stringify({
+        version:3,
+        rules,
+        designs:DESIGNS.map(d => ({id:d.id,name:d.name,sub:d.sub})),
+        textEdits
+      }));
+    } catch (_) { /* Draft backup is best effort. */ }
+  }
   function renderPreview() {
     preview.textContent = compile();
+    persistDraft();
     document.getElementById('pi-save-btn').textContent = isDirty() ? 'Save *' : 'Save';
     updateOverlay();
   }
@@ -1471,13 +1544,34 @@ renderAll();
   async function initialize() {
     pageSource = await getPageSource();
     rules = parseSavedRules(pageSource);
-    try {
-      const local = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-      if (Array.isArray(local)) rules = local.filter(r => r.selector && r.shared);
-    } catch (_) { /* Local storage is optional. */ }
+    // Saved snapshots represent the published source, not an unsaved local draft.
     savedJSON = JSON.stringify(rules);
     savedNamesJSON = JSON.stringify(DESIGNS);
     savedTextJSON = JSON.stringify(textEdits);
+    try {
+      const local = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+      if (Array.isArray(local)) {
+        rules = local.filter(r => r.selector && (r.shared || r.desktop || r.mobile));
+      } else if (local && local.version === 3) {
+        if (Array.isArray(local.rules)) {
+          rules = local.rules.filter(r => r.selector && (r.shared || r.desktop || r.mobile));
+        }
+        if (Array.isArray(local.designs)) {
+          local.designs.forEach(saved => {
+            const item = DESIGNS.find(d => d.id === saved.id);
+            if (item) {
+              if (typeof saved.name === 'string') item.name = saved.name;
+              if (typeof saved.sub === 'string') item.sub = saved.sub;
+            }
+          });
+          renderAll();
+        }
+        if (Array.isArray(local.textEdits)) {
+          textEdits.splice(0,textEdits.length,...local.textEdits);
+          if (window.__printihaApplyTextEdits) window.__printihaApplyTextEdits();
+        }
+      }
+    } catch (_) { /* Local storage is optional. */ }
     renderPreview();
   }
 
@@ -1532,22 +1626,33 @@ renderAll();
       if ([...withProducts.matchAll(textMarker)].length !== 1) throw new Error('Text override marker missing.');
       const safeText = JSON.stringify(textEdits).replace(/</g,'\\u003c');
       const updated = withProducts.replace(textMarker,(_,a,b) => a + safeText + b);
-      const blob = new Blob([updated],{type:'text/html;charset=utf-8'});
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'index.html';
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 15000);
-      try { localStorage.setItem(DRAFT_KEY,JSON.stringify(rules)); } catch (_) { /* Optional */ }
-      savedJSON = JSON.stringify(rules);
-      savedNamesJSON = JSON.stringify(DESIGNS);
-      savedTextJSON = JSON.stringify(textEdits);
+      // Present a real anchor that the user can click. No false "downloaded" alert.
+      presentExport(updated);
+      let fileWritten = false;
+      if (typeof window.showSaveFilePicker === 'function') {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName:'index.html',
+            types:[{description:'HTML file',accept:{'text/html':['.html']}}]
+          });
+          const writer = await handle.createWritable();
+          await writer.write(new Blob([updated],{type:'text/html;charset=utf-8'}));
+          await writer.close();
+          fileWritten = true;
+          exportPanel.querySelector('#pi-export-status').textContent =
+            'Saved to your computer as index.html. You can also use the download button below.';
+        } catch (pickerError) {
+          exportPanel.querySelector('#pi-export-status').textContent =
+            'File is ready but not saved yet. Click Download index.html below to save it.';
+        }
+      }
+      if (fileWritten) {
+        savedJSON = JSON.stringify(rules);
+        savedNamesJSON = JSON.stringify(DESIGNS);
+        savedTextJSON = JSON.stringify(textEdits);
+      }
+      persistDraft();
       renderPreview();
-      window.alert('index.html downloaded with layout and text changes. Send it here to publish on GitHub.');
     } catch (e) {
       window.alert('Could not download index.html: ' + e.message);
     } finally {
