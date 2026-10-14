@@ -174,6 +174,171 @@ footer small{color:#555;font-size:12px}
   .pack .pn{font-size:20px}
   .pack .pu{font-size:22px}
 }
+
+/* ============================================================
+   PRINTIHA · MIX BLACK & WHITE PREMIUM
+   Visual styling only — content, section order and logic stay intact.
+   ============================================================ */
+:root{
+  --bg:#f7f6f3;
+  --bg2:#ffffff;
+  --card:#ffffff;
+  --line:#e5e2dc;
+  --txt:#171717;
+  --mute:#68645f;
+  --acc:#ed1019;
+  --acc-txt:#ffffff;
+  --red:#cf2929;
+}
+body{background:var(--bg);color:var(--txt)}
+
+/* Dark brand navigation */
+header{background:rgba(13,13,13,.97);border-bottom:1px solid #303030;color:#fff}
+nav a{color:#c7c7c7}
+nav a:hover{color:#fff}
+
+/* Light editorial hero, keeping the existing hero.webp */
+.hero{background:#f7f6f3;border-bottom:1px solid #e9e6e0}
+.hero-img{
+  height:clamp(490px,68vh,650px);
+  object-position:62% center;
+  background:#1a1a1a;
+}
+.hero-ov{
+  align-items:center;
+  background:linear-gradient(90deg,
+    #f7f6f3 0%,
+    rgba(247,246,243,.99) 22%,
+    rgba(247,246,243,.92) 35%,
+    rgba(247,246,243,.53) 49%,
+    rgba(247,246,243,.03) 69%,
+    rgba(247,246,243,0) 100%);
+}
+.hero-ov .wrap{padding-top:32px;padding-bottom:32px}
+.hero h1{font-size:clamp(42px,5.6vw,78px);max-width:480px;color:#131313;line-height:1.04}
+.hero h1 em{display:block;color:var(--acc)}
+.hero p.sub{color:#514d49;max-width:425px;font-size:15px}
+.tag{
+  background:rgba(255,255,255,.85);
+  color:#171717;
+  border:1px solid #aaa7a2;
+  border-radius:999px;
+  padding:7px 13px;
+}
+.btn{background:var(--acc);color:#fff;box-shadow:0 7px 22px rgba(140,0,0,.10)}
+.btn:hover:not(:disabled){background:#d80b14}
+.rating{color:#55514c}
+.rating b{color:var(--acc)}
+
+/* Airy service badges */
+.trust{padding:20px 0 24px}
+.trust div{
+  background:#fff;
+  color:#252525;
+  border-color:#e8e5df;
+  box-shadow:0 3px 14px rgba(20,20,20,.035);
+}
+
+/* Quality / manifesto section: light, clean, minimal red */
+.manif{background:#fff;border-top:1px solid #eeebe5;border-bottom:1px solid #eeebe5;padding:66px 0}
+.manif h2{color:#171717}
+.manif p{color:#68645f}
+.feat{background:#f7f6f3;border-color:#ece9e3}
+.feat b{color:#171717}
+.feat span{color:#69645e}
+
+/* Preserve the existing section order, alternate light and dark */
+section.step{padding:52px 0;scroll-margin-top:78px}
+#taille{background:#f7f6f3}
+#packs{
+  background:#141414;
+  color:#f8f8f8;
+  border-top-color:#141414;
+  --txt:#f8f8f8;
+  --mute:#b9b6b1;
+  --line:#3a3a3a;
+}
+#designs{background:#fff}
+#commande{background:#f7f6f3}
+#faq{background:#fff}
+.step-h h2 i{color:#8d8882}
+#packs .step-h h2 i{color:#f24b50}
+.link{color:#b9000b}
+
+/* Size selectors: subtle red only when selected */
+.size{background:#fff;border-color:#dedbd5;color:#171717}
+.size.on{
+  background:#fff2f2;
+  color:#171717;
+  border-color:var(--acc);
+  box-shadow:0 0 0 2px rgba(237,16,25,.08);
+}
+.size.on small{color:#645c59}
+
+/* Pack spotlight — premium charcoal cards */
+.pack{background:#222;color:#fff;border-color:#404040}
+.pack.on{background:#2b2424;border-color:var(--acc);box-shadow:0 0 0 2px rgba(237,16,25,.17)}
+.pack .badge{background:#444;color:#fff}
+.pack.best .badge{background:var(--acc);color:#fff}
+.pack .pq,.pack .pu small,.pack .pt s{color:#b8b8b8}
+.pack .save{color:#ff8588}
+
+/* Product grid — light cards and dark quantity buttons */
+.progress{background:#fff}
+.pbar{background:#e9e6e1}
+.dcard{background:#faf9f7;border-color:#e9e6e1;box-shadow:0 5px 22px rgba(0,0,0,.035)}
+.dcard.on{border-color:var(--acc)}
+.dimg{background:#f0eeea}
+.dimg .ph{
+  background:repeating-linear-gradient(45deg,#eeece8,#eeece8 12px,#e8e5e0 12px,#e8e5e0 24px);
+  color:#aaa49e;
+}
+.qty{border-color:#dedbd5;background:#fff}
+.qty button{background:#f0eeeb;color:#171717}
+.qty button.plus{background:#1b1b1b;color:#fff}
+.qty button.plus:hover:not(:disabled){background:#b8000b}
+
+/* Checkout and FAQ */
+.form{background:#fff;border-color:#e7e3dc;box-shadow:0 10px 34px rgba(0,0,0,.04);max-width:760px;margin:0 auto}
+input,textarea{background:#fbfaf8;border-color:#dedad3;color:#171717}
+input::placeholder,textarea::placeholder{color:#9b958e}
+.faq details{border-bottom-color:#e8e5df}
+.faq summary::after{color:var(--acc)}
+
+/* Black footer and sticky conversion bar */
+footer{background:#111;color:#f6f6f6;border-top:1px solid #252525;margin-top:0;padding:48px 0 30px}
+footer .links{color:#d2d2d2}
+footer small{color:#989898}
+.sticky{background:rgba(14,14,14,.97);border-top:1px solid #363636;color:#fff}
+.sticky .st small{color:#bdbdbd}
+.sticky .btn{color:#fff}
+.toast{background:#1b1b1b;color:#fff}
+
+@media (max-width:760px){
+  /* On mobile: photo first, readable light hero copy underneath */
+  .hero{display:flex;flex-direction:column}
+  .hero-img{
+    width:100%;
+    height:clamp(245px,67vw,390px);
+    object-position:center 38%;
+  }
+  .hero-ov{position:relative;inset:auto;display:block;background:#f7f6f3}
+  .hero-ov .wrap{padding:26px 16px 30px}
+  .hero h1{font-size:clamp(39px,10.2vw,58px);max-width:100%}
+  .hero p.sub{font-size:14px;max-width:100%;margin:13px 0 20px}
+  .tag{font-size:10px;margin-bottom:13px}
+  .rating{font-size:12px;line-height:1.5}
+  .trust{padding:14px 0 22px}
+  .trust div{font-size:12px;padding:9px 12px}
+  .manif{padding:48px 0}
+  section.step{padding:40px 0}
+  .pack{padding:22px 6px 16px}
+  .sticky .btn{padding:13px 16px}
+}
+@media (prefers-reduced-motion:reduce){
+  .btn,.size,.pack,.dcard,.pbar i{transition:none}
+}
+
 </style>
 </head>
 <body>
