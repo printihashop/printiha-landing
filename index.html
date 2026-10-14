@@ -757,6 +757,12 @@ renderAll();
       var el;
       try { el = document.querySelector(item.selector); } catch (_) { return; }
       if (!el || el.hasAttribute('data-pi-inline-edit')) return;
+      if (item.attribute) {
+        if (['alt','placeholder'].includes(item.attribute) && el.getAttribute(item.attribute) !== item.text) {
+          el.setAttribute(item.attribute,item.text);
+        }
+        return;
+      }
       var node = el.childNodes[item.nodeIndex];
       if (node && node.nodeType === 3 && node.nodeValue !== item.text) node.nodeValue = item.text;
     });
@@ -1063,7 +1069,10 @@ renderAll();
       ).join('') + '</div>';
   }
   function textSlot(el) {
-    if (!el || !el.isConnected || ['SCRIPT','STYLE','IMG','INPUT','TEXTAREA','SELECT','SVG','PATH'].includes(el.tagName)) return null;
+    if (!el || !el.isConnected) return null;
+    if (el.tagName === 'IMG') return {attribute:'alt',value:el.getAttribute('alt') || ''};
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return {attribute:'placeholder',value:el.getAttribute('placeholder') || ''};
+    if (['SCRIPT','STYLE','SELECT','SVG','PATH'].includes(el.tagName)) return null;
     const nodes = Array.from(el.childNodes);
     const candidates = nodes.map((node,index) => ({node,index})).filter(x => x.node.nodeType === 3);
     if (candidates.length === 1) return {node:candidates[0].node,index:candidates[0].index,value:candidates[0].node.nodeValue};
@@ -1095,9 +1104,10 @@ renderAll();
       const slot = textSlot(el);
       if (!slot) return;
       const selector = selectorFor(el);
-      let entry = textEdits.find(item => item.selector === selector && item.nodeIndex === slot.index);
+      let entry = textEdits.find(item => item.selector === selector &&
+        (slot.attribute ? item.attribute === slot.attribute : (!item.attribute && item.nodeIndex === slot.index)));
       if (!entry) {
-        entry = {selector,nodeIndex:slot.index,text:value};
+        entry = slot.attribute ? {selector,attribute:slot.attribute,text:value} : {selector,nodeIndex:slot.index,text:value};
         textEdits.push(entry);
       } else entry.text = value;
     }
@@ -1106,7 +1116,9 @@ renderAll();
       el.appendChild(document.createTextNode(''));
       slot = textSlot(el);
     }
-    if (slot && slot.node.nodeValue !== value) slot.node.nodeValue = value;
+    if (slot && slot.attribute) {
+      if (el.getAttribute(slot.attribute) !== value) el.setAttribute(slot.attribute,value);
+    } else if (slot && slot.node.nodeValue !== value) slot.node.nodeValue = value;
     renderPreview();
   }
 
