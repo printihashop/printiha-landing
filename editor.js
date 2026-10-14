@@ -1,4 +1,4 @@
-/* PRINTIHA TEMPORARY STRUCTURED VISUAL EDITOR — NO PASSWORD / LOCAL EXPORT
+/* PRINTIHA TEMPORARY FREE-MOVE VISUAL EDITOR — NO PASSWORD / LOCAL EXPORT
  * Open ?edit=1. Edit the layout, then Save to download index.html.
  * Send the downloaded file to the assistant to publish it to GitHub.
  * Remove this file and the loader after finalizing the layout.
@@ -20,6 +20,7 @@
   let active = false;
   let selected = null;
   let busy = false;
+  let dragSession = null;
 
   const style = document.createElement('style');
   style.id = 'pi-editor-ui-style';
@@ -47,6 +48,21 @@
     #pi-editor-panel .pi-help{font-size:11px;line-height:1.5;margin-top:10px}
     #pi-editor-panel .pi-device{font-weight:800;color:#ff0000;margin:6px 0}
     #pi-editor-panel .pi-count{min-width:22px;text-align:center;font-weight:800}
+    #pi-editor-panel input[type=number]{width:68px;min-width:0;padding:7px 5px;background:#ffffff;
+      color:#0d0d0d;border:1px solid #0d0d0d;border-radius:6px;font:700 12px Inter,system-ui,sans-serif}
+    #pi-editor-panel .pi-mini{font-size:11px;font-weight:700}
+    #pi-editor-panel .pi-section{border-top:1px solid #0d0d0d;padding-top:10px;margin-top:12px}
+    #pi-editor-overlay{position:fixed;z-index:109;border:2px dashed #ff0000;box-sizing:border-box;
+      pointer-events:none;display:block}
+    #pi-editor-overlay[hidden]{display:none}
+    .pi-editor-handle{position:absolute;display:flex;align-items:center;justify-content:center;
+      min-width:34px;min-height:34px;background:#ff0000;color:#ffffff;border:2px solid #ffffff;
+      border-radius:7px;font:800 17px Inter,system-ui,sans-serif;pointer-events:auto;
+      touch-action:none;user-select:none;cursor:grab;box-shadow:0 2px 9px rgba(13,13,13,.35)}
+    .pi-editor-handle:active{cursor:grabbing}
+    #pi-move-handle{top:-19px;left:-19px}
+    #pi-resize-handle{right:-19px;bottom:-19px;cursor:nwse-resize}
+    body.pi-editor-dragging,body.pi-editor-dragging *{user-select:none!important}
     @media(max-width:760px){
       #pi-editor-actions{gap:5px}
       .pi-editor-btn{font-size:11px;padding:8px 9px}
@@ -72,6 +88,13 @@
   panel.setAttribute('aria-label', 'PRINTIHA visual editor');
   document.body.appendChild(panel);
 
+  const overlay = document.createElement('div');
+  overlay.id = 'pi-editor-overlay';
+  overlay.hidden = true;
+  overlay.innerHTML = '<button type="button" class="pi-editor-handle" id="pi-move-handle" aria-label="Drag to move selected element" title="Drag to move">✥</button>' +
+    '<button type="button" class="pi-editor-handle" id="pi-resize-handle" aria-label="Drag to resize selected element" title="Drag to resize">↘</button>';
+  document.body.appendChild(overlay);
+
   function currentDevice() { return window.matchMedia('(max-width:760px)').matches ? 'mobile' : 'desktop'; }
   function isDirty() { return JSON.stringify(rules) !== savedJSON; }
   function esc(s) { return String(s).replace(/[&<>"']/g, x => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x])); }
@@ -84,7 +107,7 @@
     const r = getRule(selector, false);
     return r && r[device] ? r[device] : {};
   }
-  function updateSettings(selector, update) {
+  function updateSettings(selector, update, fast) {
     const r = getRule(selector, true);
     const device = currentDevice();
     r[device] = Object.assign({}, r[device] || {}, update);
@@ -94,9 +117,9 @@
     if (!Object.keys(r[device]).length) delete r[device];
     rules = rules.filter(x => x.desktop || x.mobile);
     renderPreview();
-    renderPanel();
+    if (!fast) renderPanel();
   }
-  function declarations(s) {
+  function declarations(s, selector) {
     if (!s) return '';
     const d = [];
     if (s.before) d.push('margin-top:' + s.before + 'px!important');
@@ -111,13 +134,33 @@
       d.push('align-self:' + (a === 'center' ? 'center' : a === 'right' ? 'flex-end' : 'flex-start') + '!important');
     }
     if (s.order) d.push('order:' + s.order + '!important');
+    if (Number.isFinite(s.x) || Number.isFinite(s.y)) {
+      d.push('translate:' + (s.x || 0) + 'px ' + (s.y || 0) + 'px!important');
+    }
+    if (s.w) {
+      if (/(?:^|> )(?:span|em|b|small|strong|i):nth-child\(\d+\)$/.test(selector)) {
+        d.push('display:inline-block!important');
+      }
+      d.push('width:' + s.w + 'px!important');
+      d.push('max-width:none!important');
+      d.push('box-sizing:border-box!important');
+    }
+    if (s.h) {
+      if (/(?:^|> )img:nth-child\(\d+\)$/.test(selector)) {
+        d.push('height:' + s.h + 'px!important');
+        d.push('max-height:none!important');
+      } else {
+        d.push('min-height:' + s.h + 'px!important');
+      }
+    }
+    if (s.font) d.push('font-size:' + s.font + 'px!important');
     return d.join(';');
   }
   function compile() {
     const out = [];
     ['desktop','mobile'].forEach(device => {
       const lines = rules.map(r => {
-        const d = declarations(r[device]);
+        const d = declarations(r[device],r.selector);
         return d ? '  ' + r.selector + '{' + d + '}' : '';
       }).filter(Boolean);
       if (lines.length) out.push('@media ' + (device === 'mobile' ? '(max-width:760px)' : '(min-width:761px)') + '{\n' + lines.join('\n') + '\n}');
@@ -127,6 +170,7 @@
   function renderPreview() {
     preview.textContent = compile();
     document.getElementById('pi-save-btn').textContent = isDirty() ? 'Save *' : 'Save';
+    updateOverlay();
   }
   function selectorFor(el) {
     if (!(el instanceof Element)) return '';
@@ -145,7 +189,7 @@
   }
   function editable(el) {
     if (!el || el === document.body || el === document.documentElement) return false;
-    if (el.closest('#pi-editor-panel,#pi-editor-actions')) return false;
+    if (el.closest('#pi-editor-panel,#pi-editor-actions,#pi-editor-overlay')) return false;
     if (['SCRIPT','STYLE','HEAD','HTML'].includes(el.tagName)) return false;
     return true;
   }
@@ -181,44 +225,141 @@
     if (selected) selected.classList.remove('pi-editor-selected');
     selected = el;
     selected.classList.add('pi-editor-selected');
+    updateOverlay();
     renderPanel();
   }
   function renderPanel() {
-    if (!active) { panel.hidden = true; return; }
+    if (!active) { panel.hidden = true; overlay.hidden = true; return; }
     panel.hidden = false;
+    updateOverlay();
     if (!selected) {
       panel.innerHTML = '<div class="pi-title">PRINTIHA Layout Editor</div>' +
         '<div class="pi-device">Editing: ' + currentDevice().toUpperCase() + '</div>' +
-        '<p>Click any text, image, card or button on the page to select it.</p>' +
-        '<p class="pi-help">Adjust spacing, alignment and width. In grids and rows, use Earlier / Later to reorder. Save downloads index.html; send that file to publish on GitHub.</p>';
+        '<p>Click any text, image, card or button to select it.</p>' +
+        '<p class="pi-help">Drag the red ✥ handle to move in any direction. Drag ↘ to resize. Save downloads index.html; send it here to publish.</p>';
       return;
     }
     const selector = selectorFor(selected);
     const s = getSettings(selector,currentDevice());
     const label = selected.textContent.trim().slice(0,54) || selected.getAttribute('alt') || selected.tagName.toLowerCase();
-    const opts = [['default','Original'],['320','320px'],['480','480px'],['640','640px'],['960','960px'],['full','Full width']];
+    const isText = textLike(selected);
+    const dims = selected.getBoundingClientRect();
+    const computed = window.getComputedStyle(selected);
+    const baseFont = Math.round(parseFloat(computed.fontSize)) || 16;
     panel.innerHTML =
-      '<div class="pi-title">PRINTIHA Layout Editor</div>' +
+      '<div class="pi-title">PRINTIHA Free Layout Editor</div>' +
       '<div class="pi-device">Editing: ' + currentDevice().toUpperCase() + '</div>' +
       '<div class="pi-target"><b>Selected:</b> ' + esc(label) + '</div>' +
-      '<div class="pi-row"><span class="pi-label">Alignment</span>' +
+      '<div class="pi-section"><b>MOVE FREELY</b> — drag ✥ on the element</div>' +
+      '<div class="pi-row"><span class="pi-label">X / Y (px)</span>' +
+      '<input type="number" data-number="x" min="-5000" max="5000" step="1" value="' + (s.x || 0) + '" aria-label="Horizontal position">' +
+      '<input type="number" data-number="y" min="-5000" max="5000" step="1" value="' + (s.y || 0) + '" aria-label="Vertical position"></div>' +
+      '<div class="pi-row"><span class="pi-label">Nudge</span>' +
+      '<button data-nudge="left" title="Move left 1px">←</button>' +
+      '<button data-nudge="up" title="Move up 1px">↑</button>' +
+      '<button data-nudge="down" title="Move down 1px">↓</button>' +
+      '<button data-nudge="right" title="Move right 1px">→</button></div>' +
+      '<div class="pi-section"><b>RESIZE</b> — drag ↘ on the element</div>' +
+      '<div class="pi-row"><span class="pi-label">Width (px)</span>' +
+      '<input type="number" data-number="w" min="24" max="3000" step="1" placeholder="' + Math.round(dims.width) + '" value="' + (s.w || '') + '" aria-label="Element width">' +
+      '<span class="pi-mini">Height (px)</span>' +
+      '<input type="number" data-number="h" min="24" max="3000" step="1" placeholder="' + Math.round(dims.height) + '" value="' + (s.h || '') + '" aria-label="Element height"></div>' +
+      (isText ? '<div class="pi-row"><span class="pi-label">Text size</span>' +
+        '<button data-font="-1">−</button>' +
+        '<input type="number" data-number="font" min="8" max="250" step="1" value="' + (s.font || baseFont) + '" aria-label="Font size in pixels">' +
+        '<button data-font="1">+</button></div>' : '') +
+      '<div class="pi-section"><b>OTHER LAYOUT</b></div>' +
+      '<div class="pi-row"><span class="pi-label">Align</span>' +
       ['left','center','right'].map(a => '<button data-align="' + a + '" class="' + (s.align === a ? 'pi-on' : '') + '">' + a + '</button>').join('') + '</div>' +
-      '<div class="pi-row"><span class="pi-label">Space above</span>' +
+      '<div class="pi-row"><span class="pi-label">Above</span>' +
       '<button data-action="before-minus">−</button><span class="pi-count">' + (s.before || 0) + '</span>' +
-      '<button data-action="before-plus">+</button></div>' +
-      '<div class="pi-row"><span class="pi-label">Space below</span>' +
+      '<button data-action="before-plus">+</button>' +
+      '<span class="pi-label">Below</span>' +
       '<button data-action="after-minus">−</button><span class="pi-count">' + (s.after || 0) + '</span>' +
       '<button data-action="after-plus">+</button></div>' +
-      '<div class="pi-row"><span class="pi-label">Max width</span><select id="pi-width">' +
-      opts.map(([v,t]) => '<option value="' + v + '"' + ((s.width || 'default') === v ? ' selected' : '') + '>' + t + '</option>').join('') +
-      '</select></div>' +
       '<div class="pi-row"><span class="pi-label">Reorder</span>' +
       '<button data-action="earlier"' + (!orderable() ? ' disabled' : '') + '>↑ Earlier</button>' +
       '<button data-action="later"' + (!orderable() ? ' disabled' : '') + '>↓ Later</button></div>' +
       '<div class="pi-row"><button data-action="parent">Select parent</button>' +
-      '<button data-action="reset">Reset this element</button></div>' +
-      '<p class="pi-help">Changes are previewed immediately. Save downloads index.html and keeps a local draft. Send the file to publish it. Mobile and desktop are saved separately.</p>';
+      '<button data-action="position-reset">Reset position</button>' +
+      '<button data-action="size-reset">Reset size</button>' +
+      '<button data-action="reset">Reset all</button></div>' +
+      '<p class="pi-help">Mobile and desktop layouts are separate. Free movement may overlap nearby content, so check both sizes before saving. Save downloads index.html without a password.</p>';
   }
+
+  function textLike(el) {
+    return !!el && /^(H[1-6]|P|SPAN|B|STRONG|SMALL|EM|I|A|BUTTON|LABEL|SUMMARY|LI)$/.test(el.tagName);
+  }
+  function updateOverlay() {
+    if (!active || !selected || !selected.isConnected) {
+      overlay.hidden = true;
+      return;
+    }
+    const rect = selected.getBoundingClientRect();
+    if (!Number.isFinite(rect.left) || !Number.isFinite(rect.top)) {
+      overlay.hidden = true;
+      return;
+    }
+    overlay.hidden = false;
+    overlay.style.left = rect.left + 'px';
+    overlay.style.top = rect.top + 'px';
+    overlay.style.width = Math.max(1,rect.width) + 'px';
+    overlay.style.height = Math.max(1,rect.height) + 'px';
+  }
+  function clamp(n,min,max) { return Math.max(min,Math.min(max,Math.round(n))); }
+  function startPointer(e,mode) {
+    if (!active || !selected || busy || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const handle = e.currentTarget;
+    const s = getSettings(selectorFor(selected),currentDevice());
+    const rect = selected.getBoundingClientRect();
+    dragSession = {
+      mode, pointerId:e.pointerId, selector:selectorFor(selected),
+      startX:e.clientX, startY:e.clientY,
+      x:s.x || 0, y:s.y || 0, w:s.w || rect.width, h:s.h || rect.height,
+      font:s.font || parseFloat(window.getComputedStyle(selected).fontSize) || 16,
+      text:textLike(selected)
+    };
+    handle.setPointerCapture(e.pointerId);
+    document.body.classList.add('pi-editor-dragging');
+  }
+  function movePointer(e) {
+    const d = dragSession;
+    if (!d || d.pointerId !== e.pointerId) return;
+    e.preventDefault();
+    const dx = e.clientX - d.startX, dy = e.clientY - d.startY;
+    if (d.mode === 'move') {
+      updateSettings(d.selector,{
+        x:clamp(d.x + dx,-5000,5000),
+        y:clamp(d.y + dy,-5000,5000)
+      },true);
+    } else {
+      const w = clamp(d.w + dx,24,3000);
+      const h = clamp(d.h + dy,24,3000);
+      if (d.text) {
+        const scale = Math.min(w / Math.max(d.w,1),h / Math.max(d.h,1));
+        updateSettings(d.selector,{w,font:clamp(d.font * scale,8,250)},true);
+      } else {
+        updateSettings(d.selector,{w,h},true);
+      }
+    }
+  }
+  function endPointer(e) {
+    if (!dragSession || dragSession.pointerId !== e.pointerId) return;
+    dragSession = null;
+    document.body.classList.remove('pi-editor-dragging');
+    renderPanel();
+  }
+  for (const [id,mode] of [['pi-move-handle','move'],['pi-resize-handle','resize']]) {
+    const handle = document.getElementById(id);
+    handle.addEventListener('pointerdown',e => startPointer(e,mode));
+    handle.addEventListener('pointermove',movePointer);
+    handle.addEventListener('pointerup',endPointer);
+    handle.addEventListener('pointercancel',endPointer);
+    handle.addEventListener('lostpointercapture',endPointer);
+  }
+  document.addEventListener('scroll',updateOverlay,true);
   // A permanent layout block can be removed from the final page's editor code
   // without losing the user's saved design.
   function parseSavedRules(html) {
@@ -335,7 +476,7 @@
   document.getElementById('pi-save-btn').addEventListener('click', save);
 
   document.addEventListener('click', function (e) {
-    if (!active || e.target.closest('#pi-editor-panel,#pi-editor-actions')) return;
+    if (!active || e.target.closest('#pi-editor-panel,#pi-editor-actions,#pi-editor-overlay')) return;
     const el = e.target.closest('a,button,img,h1,h2,h3,p,span,b,small,div,section,summary,details,label,input,textarea,footer,header');
     if (!el || !editable(el)) return;
     e.preventDefault();
@@ -346,6 +487,21 @@
   panel.addEventListener('click', function (e) {
     e.stopPropagation();
     if (!selected) return;
+    const nudge = e.target.closest('[data-nudge]');
+    if (nudge) {
+      const key = ['left','right'].includes(nudge.dataset.nudge) ? 'x' : 'y';
+      const delta = ['left','up'].includes(nudge.dataset.nudge) ? -1 : 1;
+      const s = getSettings(selectorFor(selected),currentDevice());
+      updateSettings(selectorFor(selected),{[key]:clamp((s[key] || 0) + delta,-5000,5000)});
+      return;
+    }
+    const font = e.target.closest('[data-font]');
+    if (font) {
+      const s = getSettings(selectorFor(selected),currentDevice());
+      const base = s.font || parseFloat(window.getComputedStyle(selected).fontSize) || 16;
+      updateSettings(selectorFor(selected),{font:clamp(base + Number(font.dataset.font),8,250)});
+      return;
+    }
     const align = e.target.closest('[data-align]');
     if (align) { updateSettings(selectorFor(selected),{align:align.dataset.align}); return; }
     const button = e.target.closest('[data-action]');
@@ -355,6 +511,10 @@
     const s = getSettings(selector,currentDevice());
     if (action === 'parent') {
       if (editable(selected.parentElement)) select(selected.parentElement);
+    } else if (action === 'position-reset') {
+      updateSettings(selector,{x:0,y:0});
+    } else if (action === 'size-reset') {
+      updateSettings(selector,{w:0,h:0,font:0});
     } else if (action === 'reset') {
       const r = getRule(selector,false);
       if (r) {
@@ -371,9 +531,17 @@
     }
   });
   panel.addEventListener('change',function(e){
-    if (selected && e.target.id === 'pi-width') updateSettings(selectorFor(selected),{width:e.target.value});
+    if (!selected) return;
+    const field = e.target.closest('[data-number]');
+    if (!field) return;
+    const key = field.dataset.number;
+    const limits = {x:[-5000,5000],y:[-5000,5000],w:[24,3000],h:[24,3000],font:[8,250]};
+    if (!limits[key]) return;
+    const n = field.value.trim() === '' ? 0 : Number(field.value);
+    if (!Number.isFinite(n)) return;
+    updateSettings(selectorFor(selected),{[key]:n === 0 ? 0 : clamp(n,...limits[key])});
   });
-  window.addEventListener('resize',function(){if(active)renderPanel();});
+  window.addEventListener('resize',function(){if(active){updateOverlay();renderPanel();}});
   window.addEventListener('beforeunload',function(e){
     if (isDirty()) {e.preventDefault();e.returnValue='';}
   });
