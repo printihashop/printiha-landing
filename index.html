@@ -404,6 +404,49 @@ body.size-modal-open{overflow:hidden}
   .sticky .st small{font-size:11px}
 }
 /* PRINTIHA_REMARKS_FIXES_END */
+
+/* PRINTIHA_STICKY_DEAL_START — appears only after selecting a T-shirt */
+body{padding-bottom:0}
+body.has-sticky-deal{padding-bottom:108px}
+.sticky{
+  padding:10px 0 calc(10px + env(safe-area-inset-bottom));
+  transform:translate3d(0,110%,0);opacity:0;visibility:hidden;pointer-events:none;
+  transition:transform 380ms cubic-bezier(.22,1,.36,1),opacity 260ms ease,visibility 0s linear 380ms;
+  will-change:transform
+}
+.sticky.is-visible{
+  transform:translate3d(0,0,0);opacity:1;visibility:visible;pointer-events:auto;
+  transition:transform 380ms cubic-bezier(.22,1,.36,1),opacity 260ms ease,visibility 0s
+}
+.sticky .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sticky .st{flex:1;min-width:0}
+.sticky .st-top{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-bottom:3px}
+.sticky .st-kicker{font-size:10px;letter-spacing:.08em;font-weight:800;color:#ffffff}
+.sticky .st-save{display:inline-block;padding:2px 8px;border-radius:3px;background:#ffffff;color:#0d0d0d;font-size:10px;line-height:1.5;font-weight:800}
+.sticky .st-save[hidden],.sticky .st-old[hidden]{display:none!important}
+.sticky .st-main{display:flex;align-items:baseline;flex-wrap:wrap;gap:3px 8px}
+.sticky .st-main #stTitle{font-size:15px;color:#ffffff;white-space:nowrap}
+.sticky .st-main .st-old{font-size:13px;opacity:.6;color:#ffffff;white-space:nowrap}
+.sticky .st-main .st-price{font-size:24px;font-weight:900;color:#ffffff;line-height:1.2;white-space:nowrap}
+.sticky .st-main .st-unit{font-size:11px;color:#ffffff;opacity:.82;white-space:nowrap}
+.sticky .st small{font-size:11px;color:#ffffff;opacity:.9;white-space:normal;overflow:visible}
+.sticky .btn{white-space:nowrap}
+.sticky.is-updating .st-price{animation:pi-sticky-deal-update 240ms ease-out both}
+@keyframes pi-sticky-deal-update{from{transform:translateY(5px);opacity:.65}to{transform:translateY(0);opacity:1}}
+body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
+@media(max-width:760px){
+  body.has-sticky-deal{padding-bottom:160px}
+  .sticky .wrap{flex-wrap:wrap;gap:7px}
+  .sticky .st{flex-basis:100%}
+  .sticky .st-main .st-price{font-size:22px}
+  .sticky .btn{width:100%;padding:11px 14px;font-size:14px}
+  body.has-sticky-deal .toast{bottom:calc(165px + env(safe-area-inset-bottom))}
+}
+@media(prefers-reduced-motion:reduce){
+  .sticky{transition:none!important}
+  .sticky.is-updating .st-price{animation:none!important}
+}
+/* PRINTIHA_STICKY_DEAL_END */
 </style>
 </head>
 <body>
@@ -530,10 +573,22 @@ body.size-modal-open{overflow:hidden}
   </div>
 </footer>
 
-<div class="sticky">
+<div class="sticky" id="stickyDeal" aria-hidden="true" inert>
   <div class="wrap">
-    <div class="st"><b id="stTitle">Trio · 499 DH</b><small id="stSub">Choisis ta taille pour commencer</small></div>
-    <button class="btn" id="stBtn">Commander →</button>
+    <div class="st">
+      <div class="st-top">
+        <span class="st-kicker" id="stKicker">TON OFFRE</span>
+        <span class="st-save" id="stSave" hidden></span>
+      </div>
+      <div class="st-main">
+        <b id="stTitle"></b>
+        <s class="st-old" id="stOldPrice" hidden></s>
+        <b class="st-price" id="stPrice"></b>
+        <span class="st-unit" id="stUnit"></span>
+      </div>
+      <small id="stSub">Livraison gratuite · Paiement à la livraison</small>
+    </div>
+    <button type="button" class="btn" id="stBtn">Choisir ma taille →</button>
   </div>
 </div>
 
@@ -756,12 +811,50 @@ function nextStep() {
   return { txt: "Taille " + state.size + " · " + totalPicked() + " T-shirt(s) · " + (UNIT_PRICE * totalPicked() - getActiveOffer().price) + " DH économisés", btn: "Commander →", target: "commande" };
 }
 
+var stickyDealLastKey = "";
+var stickyDealPulseTimer = null;
 function renderSticky() {
+  var bar = $("stickyDeal");
+  var count = totalPicked();
+  var visible = count > 0;
+  bar.classList.toggle("is-visible", visible);
+  bar.setAttribute("aria-hidden", visible ? "false" : "true");
+  if (visible) bar.removeAttribute("inert");
+  else bar.setAttribute("inert", "");
+  document.body.classList.toggle("has-sticky-deal", visible);
+  if (!visible) {
+    stickyDealLastKey = "";
+    bar.classList.remove("is-updating");
+    clearTimeout(stickyDealPulseTimer);
+    return;
+  }
   var p = getActiveOffer();
-  var n = nextStep();
-  $("stTitle").textContent = p.name + " · " + p.price + " DH";
-  $("stSub").textContent = n.txt;
-  $("stBtn").textContent = n.btn;
+  var regular = UNIT_PRICE * count;
+  var saved = regular - p.price;
+  var perPiece = p.price / count;
+  var perRounded = Math.round(perPiece * 100) / 100;
+  var approx = Math.abs(perPiece - perRounded) > 0.00001 ? "≈" : "";
+  $("stKicker").textContent = count + " T-SHIRT" + (count > 1 ? "S" : "") + " SÉLECTIONNÉ" + (count > 1 ? "S" : "");
+  $("stTitle").textContent = p.name.toUpperCase();
+  $("stPrice").textContent = p.price + " DH";
+  $("stUnit").textContent = approx + perRounded.toLocaleString("fr-FR", {maximumFractionDigits:2}) + " DH/pièce";
+  $("stOldPrice").hidden = saved <= 0;
+  $("stSave").hidden = saved <= 0;
+  if (saved > 0) {
+    $("stOldPrice").textContent = regular + " DH";
+    $("stSave").textContent = "ÉCONOMISE " + saved + " DH";
+  }
+  $("stSub").textContent = (state.size ? "Taille " + state.size + " · " : "") + "Livraison gratuite · Paiement à la livraison";
+  $("stBtn").textContent = state.size ? "Commander maintenant →" : "Choisir ma taille →";
+  var key = count + "|" + p.price;
+  if (stickyDealLastKey && stickyDealLastKey !== key) {
+    bar.classList.remove("is-updating");
+    void bar.offsetWidth;
+    bar.classList.add("is-updating");
+    clearTimeout(stickyDealPulseTimer);
+    stickyDealPulseTimer = setTimeout(function() { bar.classList.remove("is-updating"); }, 240);
+  }
+  stickyDealLastKey = key;
 }
 
 function renderAll() {
