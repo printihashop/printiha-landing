@@ -456,6 +456,44 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
 #waOrderHelp{margin-top:8px;line-height:1.5}
 @media(max-width:760px){.footer-logo img{height:42px;max-width:175px}}
 /* PRINTIHA_HEADER_FOOTER_CHECKOUT_END */
+
+/* PRINTIHA_PACK_SELECTION_V1_START — white Trio, black Quattro, no red selected border */
+#packs #packList > .pack{
+  background:#ffffff!important;
+  color:#0d0d0d!important;
+  border-color:#0d0d0d!important;
+  transition:transform 180ms ease,box-shadow 180ms ease,border-color 180ms ease;
+}
+#packs #packList > .pack .pq,
+#packs #packList > .pack .pu small,
+#packs #packList > .pack .pt s{color:#0d0d0d!important}
+#packs #packList > .pack[data-n="4"]{
+  background:#0d0d0d!important;
+  color:#ffffff!important;
+  border-color:#0d0d0d!important;
+}
+#packs #packList > .pack[data-n="4"] .pq,
+#packs #packList > .pack[data-n="4"] .pu small,
+#packs #packList > .pack[data-n="4"] .pt s{color:#ffffff!important}
+#packs #packList > .pack.on{
+  border-color:#888888!important;
+  box-shadow:0 5px 14px rgba(13,13,13,.17)!important;
+  transform:translateY(-2px);
+}
+#packs #packList > .pack .pack-picked{
+  display:flex;justify-content:center;align-items:center;gap:5px;
+  min-height:16px;margin-top:7px;font-size:10px;line-height:1.2;
+  font-weight:800;letter-spacing:.025em;color:inherit;visibility:hidden;
+}
+#packs #packList > .pack.on .pack-picked{visibility:visible}
+#packs #packList > .pack .pack-picked .pack-check{font-size:13px;line-height:1}
+#packs #packList > .pack.pack-tap{animation:pi-pack-tap 180ms ease-out both}
+@keyframes pi-pack-tap{from{transform:translateY(0)}to{transform:translateY(-2px)}}
+@media(prefers-reduced-motion:reduce){
+  #packs #packList > .pack{transition:none!important}
+  #packs #packList > .pack.pack-tap{animation:none!important}
+}
+/* PRINTIHA_PACK_SELECTION_V1_END */
 </style>
 </head>
 <body>
@@ -616,7 +654,7 @@ var UNIT_PRICE = 199;
 var PACKS = [
   { n: 1, name: "Single", price: 199, label: "1 pièce" },
   { n: 2, name: "Duo", price: 359, label: "2 pièces" },
-  { n: 3, name: "Trio", price: 499, label: "3 pièces", badge: "Meilleure valeur", best: true },
+  { n: 3, name: "Trio", price: 499, label: "3 pièces" },
   { n: 4, name: "Quattro", price: 620, label: "4 pièces", badge: "Meilleure valeur", best: true }
 ];
 
@@ -669,7 +707,7 @@ var SIZES = [
 ];
 /* ==== FIN CONFIG ==== */
 
-var state = { size: null, pack: 3, picks: {} };
+var state = { size: null, pack: 3, packChosen: false, picks: {} };
 var productSlides = {};
 
 function $(id) { return document.getElementById(id); }
@@ -709,19 +747,21 @@ function renderSizes() {
 }
 
 function renderPacks() {
-  var chosen = totalPicked();
-  var highlighted = chosen ? Math.min(chosen, 4) : state.pack;
+  // Pack choice is highlighted only after an explicit customer tap.
+  // Checkout pricing still follows the actual number of T-shirts.
   $("packList").innerHTML = PACKS.map(function (p) {
     var full = UNIT_PRICE * p.n;
     var per = Math.round(p.price / p.n);
     var save = full - p.price;
-    return '<button type="button" class="pack' + (p.n === highlighted ? " on" : "") + (p.best ? " best" : "") + '" data-n="' + p.n + '">' +
+    var isSelected = state.packChosen && p.n === state.pack;
+    return '<button type="button" class="pack' + (isSelected ? " on" : "") + (p.best ? " best" : "") + '" data-n="' + p.n + '" aria-pressed="' + isSelected + '">' +
       (p.badge ? '<span class="badge">' + p.badge + '</span>' : '') +
       '<div class="pn">' + p.name + '</div>' +
       '<div class="pq">' + p.label + '</div>' +
       '<div class="pu">' + per + ' <small>DH/pièce</small></div>' +
       '<div class="pt">' + (save > 0 ? '<s>' + full + ' DH</s>' : '') + '<b>' + p.price + ' DH</b></div>' +
       (save > 0 ? '<span class="save">' + save + ' DH de moins</span>' : '') +
+      '<span class="pack-picked" aria-hidden="true"><span class="pack-check">✓</span> SÉLECTIONNÉ</span>' +
       '</button>';
   }).join("");
 }
@@ -945,8 +985,11 @@ $("packList").addEventListener("click", function (e) {
   var b = e.target.closest(".pack");
   if (!b) return;
   state.pack = parseInt(b.getAttribute("data-n"), 10);
+  state.packChosen = true;
   var chosen = totalPicked();
   renderAll();
+  var active = $("packList").querySelector('.pack[data-n="' + state.pack + '"]');
+  if (active) active.classList.add("pack-tap");
   if (chosen && chosen < state.pack) toast("Ajoute " + (state.pack - chosen) + " T-shirt(s) pour le " + getPack().name);
   else if (chosen > state.pack) toast("Ton offre s’adapte aux " + chosen + " T-shirts choisis.");
 });
