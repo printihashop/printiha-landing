@@ -457,13 +457,27 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
 @media(max-width:760px){.footer-logo img{height:42px;max-width:175px}}
 /* PRINTIHA_HEADER_FOOTER_CHECKOUT_END */
 
-/* PRINTIHA_PACK_SELECTION_V1_START — white Trio, black Quattro, no red selected border */
+/* PRINTIHA_PACK_SELECTION_V2_START — Choose Package Screen inspired, rollback to commit 090b7468eaf8e402f9d463dfc7d276b87022d691 */
 #packs #packList > .pack{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  position:relative;
+  min-width:0;
   background:#ffffff!important;
   color:#0d0d0d!important;
-  border-color:#0d0d0d!important;
+  border:1.5px solid #d0d0cf!important;
+  border-radius:12px;
+  padding:27px 8px 12px;
+  box-shadow:0 2px 7px rgba(13,13,13,.045);
   transition:transform 180ms ease,box-shadow 180ms ease,border-color 180ms ease;
 }
+#packs #packList > .pack .pn,
+#packs #packList > .pack .pq,
+#packs #packList > .pack .pu,
+#packs #packList > .pack .pt,
+#packs #packList > .pack .save{width:100%}
 #packs #packList > .pack .pq,
 #packs #packList > .pack .pu small,
 #packs #packList > .pack .pt s{color:#0d0d0d!important}
@@ -471,29 +485,84 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
   background:#0d0d0d!important;
   color:#ffffff!important;
   border-color:#0d0d0d!important;
+  padding-top:37px;
+  overflow:hidden;
 }
 #packs #packList > .pack[data-n="4"] .pq,
 #packs #packList > .pack[data-n="4"] .pu small,
 #packs #packList > .pack[data-n="4"] .pt s{color:#ffffff!important}
+/* Diagonal corner ribbon for the recommended plan, inspired by the reference. */
+#packs #packList > .pack[data-n="4"] .badge{
+  top:16px;
+  left:-40px;
+  width:145px;
+  max-width:none;
+  padding:3px 0;
+  transform:rotate(-45deg);
+  border-radius:0;
+  background:#ffffff!important;
+  color:#0d0d0d!important;
+  font-size:9px;
+  line-height:1.1;
+  font-weight:800;
+  letter-spacing:0;
+}
+/* Chosen plan: high-contrast outline, not a red highlight. */
 #packs #packList > .pack.on{
-  border-color:#888888!important;
-  box-shadow:0 5px 14px rgba(13,13,13,.17)!important;
+  border:2px solid #0d0d0d!important;
+  box-shadow:0 6px 16px rgba(13,13,13,.13)!important;
   transform:translateY(-2px);
 }
-#packs #packList > .pack .pack-picked{
-  display:flex;justify-content:center;align-items:center;gap:5px;
-  min-height:16px;margin-top:7px;font-size:10px;line-height:1.2;
-  font-weight:800;letter-spacing:.025em;color:inherit;visibility:hidden;
+#packs #packList > .pack[data-n="4"].on{
+  border:2px solid #ffffff!important;
+  outline:2px solid #0d0d0d;
+  outline-offset:2px;
 }
-#packs #packList > .pack.on .pack-picked{visibility:visible}
-#packs #packList > .pack .pack-picked .pack-check{font-size:13px;line-height:1}
+#packs #packList > .pack .pack-picked{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:5px;
+  width:100%;
+  min-height:29px;
+  margin-top:auto;
+  padding:7px 3px;
+  border-radius:5px;
+  background:#f1f1f1;
+  color:#0d0d0d;
+  font-size:10px;
+  line-height:1.15;
+  font-weight:800;
+  letter-spacing:.015em;
+  white-space:nowrap;
+  visibility:visible;
+}
+#packs #packList > .pack .save{margin-bottom:10px}
+#packs #packList > .pack[data-n="4"] .pack-picked{
+  background:#ffffff;
+  color:#0d0d0d;
+}
+#packs #packList > .pack.on .pack-picked{
+  background:#0d0d0d;
+  color:#ffffff;
+}
+#packs #packList > .pack[data-n="4"].on .pack-picked{
+  background:#ffffff;
+  color:#0d0d0d;
+}
+#packs #packList > .pack .pack-picked .pack-check{font-size:12px;line-height:1}
 #packs #packList > .pack.pack-tap{animation:pi-pack-tap 180ms ease-out both}
 @keyframes pi-pack-tap{from{transform:translateY(0)}to{transform:translateY(-2px)}}
+@media(max-width:760px){
+  #packs #packList > .pack{padding:26px 6px 11px;min-height:190px}
+  #packs #packList > .pack[data-n="4"]{padding-top:37px}
+  #packs #packList > .pack .pack-picked{font-size:9px;min-height:28px}
+}
 @media(prefers-reduced-motion:reduce){
   #packs #packList > .pack{transition:none!important}
   #packs #packList > .pack.pack-tap{animation:none!important}
 }
-/* PRINTIHA_PACK_SELECTION_V1_END */
+/* PRINTIHA_PACK_SELECTION_V2_END */
 </style>
 </head>
 <body>
@@ -761,7 +830,7 @@ function renderPacks() {
       '<div class="pu">' + per + ' <small>DH/pièce</small></div>' +
       '<div class="pt">' + (save > 0 ? '<s>' + full + ' DH</s>' : '') + '<b>' + p.price + ' DH</b></div>' +
       (save > 0 ? '<span class="save">' + save + ' DH de moins</span>' : '') +
-      '<span class="pack-picked" aria-hidden="true"><span class="pack-check">✓</span> SÉLECTIONNÉ</span>' +
+      '<span class="pack-picked" aria-hidden="true">' + (isSelected ? '<span class="pack-check">✓</span> SÉLECTIONNÉ' : 'CHOISIR CE PACK') + '</span>' +
       '</button>';
   }).join("");
 }
