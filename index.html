@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Printiha · T-shirts rap marocain imprimés DTF</title>
-<meta name="description" content="Printiha : t-shirts imprimés DTF aux couleurs du rap marocain. 1 pièce 199 DH, Duo 359 DH, Trio 499 DH. Livraison gratuite au Maroc, paiement à la livraison.">
+<meta name="description" content="Printiha : t-shirts imprimés DTF aux couleurs du rap marocain. 1 pièce 199 DH, Duo 359 DH, Trio 499 DH, Quattro 640 DH. Livraison gratuite au Maroc, paiement à la livraison.">
 <meta property="og:title" content="Printiha · Rap marocain, imprimé DTF">
-<meta property="og:description" content="T-shirts imprimés DTF. Trio à 166 DH la pièce. Livraison gratuite, paiement à la livraison.">
+<meta property="og:description" content="T-shirts imprimés DTF. Quattro à 160 DH la pièce. Livraison gratuite, paiement à la livraison.">
 <meta property="og:image" content="hero.webp">
 <meta property="og:locale" content="fr_MA">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -90,7 +90,7 @@ section.step{padding:40px 0;border-top:1px solid var(--line)}
 .size.on small{color:var(--acc-txt)}
 
 /* Packs */
-.packs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.packs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .pack{position:relative;border:1.5px solid var(--line);border-radius:var(--radius);padding:22px 12px 16px;text-align:center;background:var(--bg2);transition:all .15s}
 .pack.on{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,0,0,.15)}
 .pack .badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--red);color:#ffffff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap;text-transform:uppercase}
@@ -178,7 +178,7 @@ footer small{color:#0d0d0d;font-size:12px}
   .feats{grid-template-columns:repeat(2,1fr)}
   .sizes{grid-template-columns:repeat(3,1fr)}
   .grid{grid-template-columns:repeat(2,1fr);gap:10px}
-  .packs{gap:8px}
+  .packs{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .pack{padding:20px 6px 14px}
   .pack .pn{font-size:20px}
   .pack .pu{font-size:22px}
@@ -378,7 +378,7 @@ footer .links,footer small{color:#ffffff}
       <h1 class="display">LE RAP MAROCAIN. <em>AUTREMENT</em></h1>
       <p class="sub">Une coupe oversize. Un coton 250 GSM. L’univers du rap marocain, imprimé avec précision.</p>
       <a href="#designs" class="btn">Découvrir les designs →</a>
-      <div class="rating">Trio à 166 DH la pièce · Paiement à la livraison</div>
+      <div class="rating">QUATTRO PACK à 160 DH la pièce · Paiement à la livraison</div>
     </div>
   </div>
 </div>
@@ -463,7 +463,7 @@ footer .links,footer small{color:#ffffff}
     <details><summary>C'est quoi l'impression DTF ?</summary><p>Le DTF (Direct To Film) est une technique d'impression qui transfère le design sur le tissu avec une colle thermique. Résultat : des détails très nets, des couleurs vives, et une impression souple qui suit le mouvement du t-shirt sans craquer.</p></details>
     <details><summary>Est-ce que l'impression tient au lavage ?</summary><p>Oui, à condition de laver à 30°C, t-shirt retourné, et de ne pas repasser directement sur l'impression. Évite le sèche-linge pour garder les couleurs intactes le plus longtemps possible.</p></details>
     <details><summary>Comment choisir ma taille ?</summary><p>Base-toi sur ton poids : S (50 à 60 kg) · M (60 à 70 kg) · L (70 à 80 kg) · XL (80 à 90 kg) · 2XL (90 à 100 kg) · 3XL (100 kg et plus). Entre deux tailles, prends la plus grande.</p></details>
-    <details><summary>Je peux mélanger plusieurs designs ?</summary><p>Oui. Dans un Duo ou un Trio, tu choisis librement tes designs : trois artistes différents ou trois fois le même, c'est toi qui décides.</p></details>
+    <details><summary>Je peux mélanger plusieurs designs ?</summary><p>Oui. Dans un Duo, Trio ou Quattro, tu choisis librement tes designs : plusieurs artistes différents ou plusieurs fois le même, c'est toi qui décides.</p></details>
     <details><summary>Comment se passe le paiement ?</summary><p>Uniquement à la livraison, en espèces. Tu vérifies ta commande avant de payer. Aucune carte bancaire, aucun virement à l'avance.</p></details>
     <details><summary>Quel est le délai de livraison ?</summary><p>Casablanca : 24h. Grandes villes : 1 à 2 jours. Autres villes : 1 à 3 jours. La livraison est toujours gratuite.</p></details>
     <details><summary>Et si la taille ne me va pas ?</summary><p>Contacte-nous sur WhatsApp : on organise l'échange. Tu règles uniquement les frais de livraison de l'échange.</p></details>
@@ -500,7 +500,8 @@ var UNIT_PRICE = 199;
 var PACKS = [
   { n: 1, name: "Single", price: 199, label: "1 pièce" },
   { n: 2, name: "Duo", price: 359, label: "2 pièces" },
-  { n: 3, name: "Trio", price: 499, label: "3 pièces", badge: "Meilleure valeur", best: true }
+  { n: 3, name: "Trio", price: 499, label: "3 pièces", badge: "Meilleure valeur", best: true },
+  { n: 4, name: "Quattro", price: 640, label: "4 pièces" }
 ];
 
 var DESIGNS = [
