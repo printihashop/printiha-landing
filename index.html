@@ -532,11 +532,11 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
     <form class="form" id="orderForm" novalidate>
       <div class="recap" id="recap"></div>
       <label for="fNom">Nom complet</label>
-      <input id="fNom" type="text" autocomplete="name" placeholder="Ex : Yassine Benali">
+      <input id="fNom" type="text" autocomplete="name" placeholder="Ex : Yassine Benali" required>
       <label for="fTel">Téléphone</label>
       <input id="fTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 XX XX XX XX">
       <label for="fVille">Ville</label>
-      <input id="fVille" type="text" autocomplete="address-level2" placeholder="Ex : Casablanca">
+      <input id="fVille" type="text" autocomplete="address-level2" placeholder="Ex : Casablanca" required>
       <label for="fAdr">Adresse (optionnel)</label>
       <textarea id="fAdr" rows="2" autocomplete="street-address" placeholder="Quartier, rue, numéro"></textarea>
       <div style="margin-top:18px"><button type="submit" class="btn block" id="submitBtn">Confirmer ma commande →</button></div>
@@ -1023,8 +1023,7 @@ $("orderForm").addEventListener("submit", function (e) {
   msg.style.display = "none";
   $("waOrderFallback").hidden = true;
   $("waOrderHelp").hidden = true;
-  // Customer details can be confirmed later in WhatsApp. Never lose an order
-  // because of an incomplete or mistyped phone, name, city, or address.
+  // Name and city are mandatory; phone and address never block the WhatsApp order.
   ["fNom", "fTel", "fVille", "fAdr"].forEach(function (f) { $(f).classList.remove("err"); });
 
   // Show designs first, then size: never send the customer through the same step twice.
@@ -1033,10 +1032,20 @@ $("orderForm").addEventListener("submit", function (e) {
 
   // Keep the phone exactly as entered, even if it contains just one digit.
   // The WhatsApp conversation itself is the reliable contact channel.
-  var nom = $("fNom").value.trim() || "À confirmer";
+  var nom = $("fNom").value.trim();
   var tel = $("fTel").value.trim() || "À confirmer via WhatsApp";
-  var ville = $("fVille").value.trim() || "À confirmer";
+  var ville = $("fVille").value.trim();
   var adr = $("fAdr").value.trim();
+
+  if (!nom || !ville) {
+    if (!nom) $("fNom").classList.add("err");
+    if (!ville) $("fVille").classList.add("err");
+    msg.textContent = "Renseigne ton nom et ta ville pour continuer.";
+    msg.style.display = "block";
+    toast("Nom et ville obligatoires.");
+    (!nom ? $("fNom") : $("fVille")).focus();
+    return;
+  }
 
   var p = getActiveOffer();
   var text = "Nouvelle commande Printiha\n\n" +
