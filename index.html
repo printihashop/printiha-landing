@@ -104,7 +104,7 @@ section.step{padding:40px 0;border-top:1px solid var(--line)}
 .pack .save{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;color:var(--acc)}
 
 /* Designs */
-.progress{position:sticky;top:58px;z-index:20;background:var(--bg);padding:10px 0;margin-bottom:10px}
+.progress{position:static;background:var(--bg);padding:10px 0;margin-bottom:10px}
 .pbar{height:6px;background:var(--line);border-radius:999px;overflow:hidden}
 .pbar i{display:block;height:100%;width:0;background:var(--acc);transition:width .25s}
 .ptxt{font-size:13px;color:var(--mute);margin-top:6px}
@@ -1053,15 +1053,14 @@ $("orderForm").addEventListener("submit", function (e) {
 
   var p = getActiveOffer();
   var text = "Nouvelle commande Printiha\n\n" +
-    "Pack : " + p.name + " (" + p.label + ")\n" +
-    "Taille : " + state.size + "\n" +
+    "Pack : " + p.name + " / taille ( " + state.size + ")\n" +
     "Designs : " + pickedList().join(", ") + "\n" +
-    "Économie : " + (UNIT_PRICE * totalPicked() - p.price) + " DH\n" +
-    "Total : " + p.price + " DH (paiement à la livraison)\n\n" +
+    "Total : " + p.price + " DH ( livraison gratuite )\n\n" +
     "Nom : " + nom + "\n" +
     "Téléphone : " + tel + "\n" +
     "Ville : " + ville + "\n" +
-    "Adresse : " + adr;
+    "Adresse : " + adr + "\n\n" +
+    "Merci de confirmer ma commande";
 
   var orderUrl = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text);
   var fallback = $("waOrderFallback");
