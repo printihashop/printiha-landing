@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Printiha · T-shirts rap marocain imprimés DTF</title>
-<meta name="description" content="Printiha : t-shirts imprimés DTF aux couleurs du rap marocain. 1 pièce 199 DH, Duo 359 DH, Trio 499 DH, Quattro 640 DH. Livraison gratuite au Maroc, paiement à la livraison.">
+<meta name="description" content="Printiha : t-shirts imprimés DTF aux couleurs du rap marocain. 1 pièce 199 DH, Duo 359 DH, Trio 499 DH, Quattro 620 DH, dès 5 pièces à 150 DH/pièce. Livraison gratuite au Maroc, paiement à la livraison.">
 <meta property="og:title" content="Printiha · Rap marocain, imprimé DTF">
-<meta property="og:description" content="T-shirts imprimés DTF. Quattro à 160 DH la pièce. Livraison gratuite, paiement à la livraison.">
+<meta property="og:description" content="T-shirts imprimés DTF. Quattro à 155 DH la pièce, dès 5 T-shirts à 150 DH/pièce. Livraison gratuite, paiement à la livraison.">
 <meta property="og:image" content="hero.webp">
 <meta property="og:locale" content="fr_MA">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -420,7 +420,7 @@ body.size-modal-open{overflow:hidden}
       <h1 class="display">LE RAP MAROCAIN. <em>AUTREMENT</em></h1>
       <p class="sub">Une coupe oversize. Un coton 250 GSM. L’univers du rap marocain, imprimé avec précision.</p>
       <a href="#designs" class="btn">Découvrir les designs →</a>
-      <div class="rating">QUATTRO PACK à 160 DH la pièce · Paiement à la livraison</div>
+      <div class="rating">QUATTRO PACK à 155 DH la pièce · Paiement à la livraison</div>
     </div>
   </div>
 </div>
@@ -472,7 +472,7 @@ body.size-modal-open{overflow:hidden}
 <section class="step" id="packs">
   <div class="wrap">
     <div class="step-h"><h2 class="display"><i>3 ·</i> Ton pack</h2></div>
-    <p class="step-sub">Le meilleur prix s’applique automatiquement selon le nombre de T-shirts choisis.</p>
+    <p class="step-sub">Le meilleur prix s’applique automatiquement : Quattro à 155 DH/pièce, dès 5 T-shirts à 150 DH/pièce.</p>
     <div class="packs" id="packList"></div>
   </div>
 </section>
@@ -545,7 +545,7 @@ body.size-modal-open{overflow:hidden}
 
 <script>
 /* ==== CONFIG : modifier ici ==== */
-var WA_NUMBER = "212600000000";
+var WA_NUMBER = "212663655363";
 var IG_URL = "https://www.instagram.com/";
 var UNIT_PRICE = 199;
 
@@ -553,7 +553,7 @@ var PACKS = [
   { n: 1, name: "Single", price: 199, label: "1 pièce" },
   { n: 2, name: "Duo", price: 359, label: "2 pièces" },
   { n: 3, name: "Trio", price: 499, label: "3 pièces", badge: "Meilleure valeur", best: true },
-  { n: 4, name: "Quattro", price: 640, label: "4 pièces", badge: "Meilleure valeur", best: true }
+  { n: 4, name: "Quattro", price: 620, label: "4 pièces", badge: "Meilleure valeur", best: true }
 ];
 
 var DESIGNS = [
@@ -615,30 +615,13 @@ function escapeProductHtml(value) {
   });
 }
 function getPack() { return PACKS.filter(function (p) { return p.n === state.pack; })[0]; }
-// Actual number of selected T-shirts always determines the billed offer.
-// For 5+ pieces, combine existing packs at the lowest available total;
-// no new, unpublished price tier is invented.
+// The exact number of T-shirts selected determines the total shown everywhere.
+// 1–4 T-shirts: standard packs. 5+ T-shirts: fixed 150 DH per T-shirt.
 function getActiveOffer() {
   var count = totalPicked();
   if (count === 0) return getPack();
   if (count <= 4) return PACKS.filter(function(p) { return p.n === count; })[0];
-  var best = Array(count + 1).fill(null);
-  best[0] = { price: 0, parts: [] };
-  for (var i = 1; i <= count; i++) {
-    PACKS.forEach(function(p) {
-      if (i < p.n || !best[i - p.n]) return;
-      var candidate = best[i - p.n].price + p.price;
-      if (!best[i] || candidate < best[i].price) {
-        best[i] = { price: candidate, parts: best[i - p.n].parts.concat(p.name) };
-      }
-    });
-  }
-  var counts = {};
-  best[count].parts.forEach(function(name) { counts[name] = (counts[name] || 0) + 1; });
-  var names = PACKS.slice().reverse().filter(function(p) { return counts[p.name]; }).map(function(p) {
-    return (counts[p.name] > 1 ? counts[p.name] + ' × ' : '') + p.name;
-  });
-  return { n: count, name: names.join(' + '), label: count + ' pièces', price: best[count].price };
+  return { n: count, name: "Pack 5+", label: count + " pièces", price: count * 150 };
 }
 function totalPicked() {
   var t = 0;
@@ -935,7 +918,7 @@ renderAll();
 <script>
 (function(){
   'use strict';
-  var edits = /* PRINTIHA_TEXT_OVERRIDES_DATA_START */[{"selector":"#top > div:nth-child(2) > div:nth-child(1) > div:nth-child(5)","nodeIndex":0,"text":"QUATTRO PACK à 160 DH la pièce · Paiement à la livraison"},{"selector":"#designs > div:nth-child(1) > div:nth-child(1) > h2:nth-child(1) > i:nth-child(1)","nodeIndex":0,"text":"2 ·"},{"selector":"#packs > div:nth-child(1) > div:nth-child(1) > h2:nth-child(1) > i:nth-child(1)","nodeIndex":0,"text":"3 ·"}]/* PRINTIHA_TEXT_OVERRIDES_DATA_END */;
+  var edits = /* PRINTIHA_TEXT_OVERRIDES_DATA_START */[{"selector":"#top > div:nth-child(2) > div:nth-child(1) > div:nth-child(5)","nodeIndex":0,"text":"QUATTRO PACK à 155 DH la pièce · Paiement à la livraison"},{"selector":"#designs > div:nth-child(1) > div:nth-child(1) > h2:nth-child(1) > i:nth-child(1)","nodeIndex":0,"text":"2 ·"},{"selector":"#packs > div:nth-child(1) > div:nth-child(1) > h2:nth-child(1) > i:nth-child(1)","nodeIndex":0,"text":"3 ·"}]/* PRINTIHA_TEXT_OVERRIDES_DATA_END */;
   window.__printihaTextEdits = edits;
   window.__printihaApplyTextEdits = function(){
     edits.forEach(function(item){
