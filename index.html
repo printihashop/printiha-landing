@@ -1002,9 +1002,19 @@ $("grid").addEventListener("click", function (e) {
 });
 
 $("stBtn").addEventListener("click", function () {
-  var n = nextStep();
-  if (n.target === "sizeModal") openSizeModal();
-  else $(n.target).scrollIntoView({ behavior: "smooth", block: "start" });
+  // Only navigate when a product choice is missing. Once the order is ready,
+  // submit the existing form directly: no jump back to the checkout section.
+  if (!totalPicked()) {
+    $("designs").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  if (!state.size) {
+    openSizeModal();
+    return;
+  }
+  var form = $("orderForm");
+  if (typeof form.requestSubmit === "function") form.requestSubmit();
+  else $("submitBtn").click();
 });
 
 function normalizeMoroccanPhone(value) {
@@ -1029,8 +1039,9 @@ $("orderForm").addEventListener("submit", function (e) {
   var fields = ["fNom", "fTel", "fVille", "fAdr"];
   fields.forEach(function (f) { $(f).classList.remove("err"); });
 
-  if (!state.size) { msg.textContent = "Choisis ta taille."; msg.style.display = "block"; openSizeModal(); return; }
+  // Show designs first, then size: never send the customer through the same step twice.
   if (!totalPicked()) { msg.textContent = "Choisis au moins un T-shirt."; msg.style.display = "block"; $("designs").scrollIntoView({ behavior: "smooth" }); return; }
+  if (!state.size) { msg.textContent = "Choisis ta taille."; msg.style.display = "block"; openSizeModal(); return; }
 
   var nom = $("fNom").value.trim();
   var tel = normalizeMoroccanPhone($("fTel").value);
