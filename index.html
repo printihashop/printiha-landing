@@ -365,8 +365,15 @@ header .wrap{width:100%!important;min-height:0!important;max-width:1080px!import
 #packs .pack .save{color:#ff0000!important}
 .size-modal[hidden]{display:none!important}
 .size-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center}
-.size-modal-backdrop{position:absolute;inset:0;background:rgba(13,13,13,.65)}
-.size-modal-panel{position:relative;z-index:1;width:min(100%,490px);max-height:90dvh;overflow-y:auto;background:#ffffff;color:#0d0d0d;border-radius:18px 18px 0 0;padding:24px 18px calc(26px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.22)}
+.size-modal-backdrop{position:absolute;inset:0;background:rgba(13,13,13,.65);opacity:0;transition:opacity 350ms ease}
+.size-modal-panel{position:relative;z-index:1;width:min(100%,490px);max-height:90dvh;overflow-y:auto;background:#ffffff;color:#0d0d0d;border-radius:18px 18px 0 0;padding:24px 18px calc(26px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.22);transform:translate3d(0,100%,0);opacity:0;transition:transform 350ms cubic-bezier(.22,1,.36,1),opacity 280ms ease}
+.size-modal.is-open .size-modal-backdrop{opacity:1}
+.size-modal.is-open .size-modal-panel{transform:translate3d(0,0,0);opacity:1}
+.size-modal.is-closing .size-modal-backdrop{transition-duration:250ms}
+.size-modal.is-closing .size-modal-panel{transition-duration:250ms,220ms;transition-timing-function:cubic-bezier(.4,0,1,1),ease}
+.size-modal-panel .size.is-selecting{animation:pi-size-select-bounce 150ms ease-out both}
+@keyframes pi-size-select-bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@media(prefers-reduced-motion:reduce){.size-modal-backdrop,.size-modal-panel{transition:none!important}.size-modal-panel .size.is-selecting{animation:none!important}}
 .size-modal-panel h2{font-family:Anton,Impact,sans-serif;font-size:22px;line-height:1.1;margin:0 42px 6px 0}
 .size-modal-panel p{font-size:13px;margin:0 0 18px;color:#0d0d0d}
 .size-modal-close{position:absolute;top:16px;right:16px;font-size:28px;width:36px;height:36px;border:0;border-radius:50%;display:grid;place-items:center;color:#0d0d0d;background:#ffffff}
@@ -766,27 +773,62 @@ function renderAll() {
   renderSticky();
 }
 
+var sizeModalReturnFocus = null;
+var sizeModalCloseTimer = null;
+var sizeModalSelectTimer = null;
+function sizeModalReducedMotion() {
+  return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 function selectSize(value) {
+  var modal = $("sizeModal");
+  if (!modal.hidden) {
+    if (modal.classList.contains("is-closing") || sizeModalSelectTimer !== null) return;
+    var selected = $("modalSizes").querySelector('.size[data-s="' + value + '"]');
+    if (selected) selected.classList.add("is-selecting", "on");
+    sizeModalSelectTimer = setTimeout(function() {
+      sizeModalSelectTimer = null;
+      state.size = value;
+      renderAll();
+      closeSizeModal();
+      toast("Taille " + state.size + " sélectionnée");
+    }, sizeModalReducedMotion() ? 0 : 150);
+    return;
+  }
   state.size = value;
   renderAll();
-  closeSizeModal();
   toast("Taille " + state.size + " sélectionnée");
 }
-
-var sizeModalReturnFocus = null;
 function openSizeModal() {
-  sizeModalReturnFocus = document.activeElement;
+  var modal = $("sizeModal");
+  if (!modal.hidden && !modal.classList.contains("is-closing")) return;
+  if (modal.hidden) sizeModalReturnFocus = document.activeElement;
+  clearTimeout(sizeModalCloseTimer);
+  sizeModalCloseTimer = null;
   renderSizes();
-  $("sizeModal").hidden = false;
+  modal.classList.remove("is-closing", "is-open");
+  modal.hidden = false;
   document.body.classList.add("size-modal-open");
+  // Force the off-screen starting frame before sliding the sheet into view.
+  void modal.offsetWidth;
+  modal.classList.add("is-open");
   var first = $("modalSizes").querySelector(".size.on") || $("modalSizes").querySelector(".size");
-  if (first) first.focus();
+  if (first) first.focus({preventScroll:true});
 }
 function closeSizeModal() {
-  if ($("sizeModal").hidden) return;
-  $("sizeModal").hidden = true;
-  document.body.classList.remove("size-modal-open");
-  if (sizeModalReturnFocus && sizeModalReturnFocus.focus) sizeModalReturnFocus.focus();
+  var modal = $("sizeModal");
+  if (modal.hidden || modal.classList.contains("is-closing")) return;
+  clearTimeout(sizeModalSelectTimer);
+  sizeModalSelectTimer = null;
+  modal.classList.add("is-closing");
+  modal.classList.remove("is-open");
+  sizeModalCloseTimer = setTimeout(function() {
+    modal.hidden = true;
+    modal.classList.remove("is-closing");
+    document.body.classList.remove("size-modal-open");
+    if (sizeModalReturnFocus && sizeModalReturnFocus.focus) sizeModalReturnFocus.focus({preventScroll:true});
+    sizeModalReturnFocus = null;
+    sizeModalCloseTimer = null;
+  }, sizeModalReducedMotion() ? 0 : 250);
 }
 $("sizeModalClose").addEventListener("click", closeSizeModal);
 $("sizeModal").addEventListener("click", function(e) {
