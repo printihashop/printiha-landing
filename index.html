@@ -537,7 +537,7 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
       <input id="fTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 XX XX XX XX">
       <label for="fVille">Ville</label>
       <input id="fVille" type="text" autocomplete="address-level2" placeholder="Ex : Casablanca">
-      <label for="fAdr">Adresse</label>
+      <label for="fAdr">Adresse (facultative)</label>
       <textarea id="fAdr" rows="2" autocomplete="street-address" placeholder="Quartier, rue, numéro"></textarea>
       <div style="margin-top:18px"><button type="submit" class="btn block" id="submitBtn">Confirmer ma commande →</button></div>
       <div class="msg" id="formMsg" role="alert"></div>
@@ -1040,7 +1040,6 @@ $("orderForm").addEventListener("submit", function (e) {
   if (nom.length < 3) { $("fNom").classList.add("err"); bad = true; }
   if (!tel) { $("fTel").classList.add("err"); bad = true; }
   if (ville.length < 2) { $("fVille").classList.add("err"); bad = true; }
-  if (adr.length < 4) { $("fAdr").classList.add("err"); bad = true; }
   if (bad) {
     msg.textContent = !tel
       ? "Numéro invalide. Ex : 06 12 34 56 78 ou +212 6 12 34 56 78. Vérifie aussi les autres champs en rouge."
@@ -1059,7 +1058,7 @@ $("orderForm").addEventListener("submit", function (e) {
     "Nom : " + nom + "\n" +
     "Téléphone : " + tel + "\n" +
     "Ville : " + ville + "\n" +
-    "Adresse : " + adr + "\n\n" +
+    (adr ? "Adresse : " + adr + "\n" : "") + "\n" +
     "Merci de confirmer ma commande";
 
   var orderUrl = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text);
