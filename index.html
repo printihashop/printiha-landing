@@ -537,7 +537,7 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
       <input id="fTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 XX XX XX XX">
       <label for="fVille">Ville</label>
       <input id="fVille" type="text" autocomplete="address-level2" placeholder="Ex : Casablanca">
-      <label for="fAdr">Adresse (facultative)</label>
+      <label for="fAdr">Adresse (optionnel)</label>
       <textarea id="fAdr" rows="2" autocomplete="street-address" placeholder="Quartier, rue, numéro"></textarea>
       <div style="margin-top:18px"><button type="submit" class="btn block" id="submitBtn">Confirmer ma commande →</button></div>
       <div class="msg" id="formMsg" role="alert"></div>
@@ -1017,49 +1017,26 @@ $("stBtn").addEventListener("click", function () {
   else $("submitBtn").click();
 });
 
-function normalizeMoroccanPhone(value) {
-  var arabicDigits = "٠١٢٣٤٥٦٧٨٩";
-  var persianDigits = "۰۱۲۳۴۵۶۷۸۹";
-  var digits = String(value || "").replace(/[٠-٩۰-۹]/g, function(ch) {
-    var a = arabicDigits.indexOf(ch);
-    return String(a >= 0 ? a : persianDigits.indexOf(ch));
-  }).replace(/\D/g, "");
-  if (digits.indexOf("00212") === 0) digits = digits.slice(5);
-  else if (digits.indexOf("212") === 0) digits = digits.slice(3);
-  else if (digits.indexOf("0") === 0) digits = digits.slice(1);
-  return /^[5-7]\d{8}$/.test(digits) ? "0" + digits : "";
-}
-
 $("orderForm").addEventListener("submit", function (e) {
   e.preventDefault();
   var msg = $("formMsg");
   msg.style.display = "none";
   $("waOrderFallback").hidden = true;
   $("waOrderHelp").hidden = true;
-  var fields = ["fNom", "fTel", "fVille", "fAdr"];
-  fields.forEach(function (f) { $(f).classList.remove("err"); });
+  // Customer details can be confirmed later in WhatsApp. Never lose an order
+  // because of an incomplete or mistyped phone, name, city, or address.
+  ["fNom", "fTel", "fVille", "fAdr"].forEach(function (f) { $(f).classList.remove("err"); });
 
   // Show designs first, then size: never send the customer through the same step twice.
   if (!totalPicked()) { msg.textContent = "Choisis au moins un T-shirt."; msg.style.display = "block"; $("designs").scrollIntoView({ behavior: "smooth" }); return; }
   if (!state.size) { msg.textContent = "Choisis ta taille."; msg.style.display = "block"; openSizeModal(); return; }
 
-  var nom = $("fNom").value.trim();
-  var tel = normalizeMoroccanPhone($("fTel").value);
-  var ville = $("fVille").value.trim();
+  // Keep the phone exactly as entered, even if it contains just one digit.
+  // The WhatsApp conversation itself is the reliable contact channel.
+  var nom = $("fNom").value.trim() || "À confirmer";
+  var tel = $("fTel").value.trim() || "À confirmer via WhatsApp";
+  var ville = $("fVille").value.trim() || "À confirmer";
   var adr = $("fAdr").value.trim();
-  var bad = false;
-  if (nom.length < 3) { $("fNom").classList.add("err"); bad = true; }
-  if (!tel) { $("fTel").classList.add("err"); bad = true; }
-  if (ville.length < 2) { $("fVille").classList.add("err"); bad = true; }
-  if (bad) {
-    msg.textContent = !tel
-      ? "Numéro invalide. Ex : 06 12 34 56 78 ou +212 6 12 34 56 78. Vérifie aussi les autres champs en rouge."
-      : "Complète les champs en rouge pour confirmer ta commande.";
-    msg.style.display = "block";
-    var firstInvalid = fields.map(function(id) { return $(id); }).filter(function(el) { return el.classList.contains("err"); })[0];
-    if (firstInvalid) firstInvalid.focus();
-    return;
-  }
 
   var p = getActiveOffer();
   var text = "Nouvelle commande Printiha\n\n" +
