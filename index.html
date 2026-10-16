@@ -3,6 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- PRINTIHA_META_PIXEL_START -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window,document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','1616409290185334');
+fbq('track','PageView');
+fbq('track','ViewContent',{
+  content_type:'product_group',
+  content_ids:['SALGOAT'],
+  content_name:'PRINTIHA SALGOAT T-shirts',
+  currency:'MAD'
+});
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1616409290185334&amp;ev=PageView&amp;noscript=1"
+alt=""></noscript>
+<!-- PRINTIHA_META_PIXEL_END -->
 <title>Printiha · T-shirts rap marocain imprimés DTF</title>
 <meta name="description" content="Printiha : t-shirts imprimés DTF aux couleurs du rap marocain. 1 pièce 199 DH, Duo 359 DH, Trio 499 DH, Quattro 620 DH, dès 5 pièces à 150 DH/pièce. Livraison gratuite au Maroc, paiement à la livraison.">
 <meta property="og:title" content="Printiha · Rap marocain, imprimé DTF">
@@ -777,6 +800,32 @@ var SIZES = [
 /* ==== FIN CONFIG ==== */
 
 var state = { size: null, pack: 3, packChosen: false, picks: {} };
+// Meta Pixel: only product selections and totals; never send customer contact details.
+var printihaCheckoutTracked = false;
+function trackPrintihaPixel(eventName, data) {
+  if (typeof window.fbq === "function") window.fbq("track", eventName, data || {});
+}
+function printihaCartPixelData() {
+  var offer = getActiveOffer();
+  var contents = Object.keys(state.picks).filter(function(id) {
+    return state.picks[id] > 0;
+  }).map(function(id) {
+    return { id: id, quantity: state.picks[id] };
+  });
+  return {
+    content_type: "product",
+    content_ids: contents.map(function(item) { return item.id; }),
+    contents: contents,
+    num_items: totalPicked(),
+    value: offer.price,
+    currency: "MAD"
+  };
+}
+function trackPrintihaCheckoutStart() {
+  if (printihaCheckoutTracked || !totalPicked() || !state.size) return;
+  printihaCheckoutTracked = true;
+  trackPrintihaPixel("InitiateCheckout", printihaCartPixelData());
+}
 var productSlides = {};
 
 function $(id) { return document.getElementById(id); }
@@ -1110,6 +1159,11 @@ $("grid").addEventListener("click", function (e) {
   cur += op;
   if (cur <= 0) delete state.picks[id]; else state.picks[id] = cur;
   renderAll();
+  if (op > 0) {
+    var pixelCart = printihaCartPixelData();
+    pixelCart.content_name = (DESIGNS.filter(function(d) { return d.id === id; })[0] || {}).name || "PRINTIHA T-shirt";
+    trackPrintihaPixel("AddToCart", pixelCart);
+  }
   if (op > 0 && totalPicked() <= 4) toast(getActiveOffer().name + " · " + getActiveOffer().price + " DH");
 });
 
@@ -1125,10 +1179,12 @@ $("stBtn").addEventListener("click", function () {
     return;
   }
   var form = $("orderForm");
+  trackPrintihaCheckoutStart();
   if (typeof form.requestSubmit === "function") form.requestSubmit();
   else $("submitBtn").click();
 });
 
+$("orderForm").addEventListener("focusin", trackPrintihaCheckoutStart);
 $("orderForm").addEventListener("submit", function (e) {
   e.preventDefault();
   var msg = $("formMsg");
@@ -1141,6 +1197,7 @@ $("orderForm").addEventListener("submit", function (e) {
   // Show designs first, then size: never send the customer through the same step twice.
   if (!totalPicked()) { msg.textContent = "Choisis au moins un T-shirt."; msg.style.display = "block"; $("designs").scrollIntoView({ behavior: "smooth" }); return; }
   if (!state.size) { msg.textContent = "Choisis ta taille."; msg.style.display = "block"; openSizeModal(); return; }
+  trackPrintihaCheckoutStart();
 
   // Keep the phone exactly as entered, even if it contains just one digit.
   // The WhatsApp conversation itself is the reliable contact channel.
@@ -1175,6 +1232,8 @@ $("orderForm").addEventListener("submit", function (e) {
   fallback.href = orderUrl;
   fallback.hidden = false;
   $("waOrderHelp").hidden = false;
+  // Contact is a WhatsApp handoff attempt, not a confirmed order or purchase.
+  trackPrintihaPixel("Contact", printihaCartPixelData());
   // A direct click opens WhatsApp. If the browser blocks new tabs, navigate in the same tab.
   try {
     var opened = window.open(orderUrl, "_blank");
