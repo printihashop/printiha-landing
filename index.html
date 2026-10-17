@@ -474,9 +474,6 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
 /* PRINTIHA_HEADER_FOOTER_CHECKOUT_START */
 .footer-logo{display:flex;justify-content:center;align-items:center;width:max-content;max-width:100%;margin:0 auto}
 .footer-logo img{display:block;width:auto;height:48px;max-width:min(190px,100%);object-fit:contain}
-#waOrderFallback[hidden],#waOrderHelp[hidden]{display:none!important}
-#waOrderFallback{margin-top:12px;text-align:center}
-#waOrderHelp{margin-top:8px;line-height:1.5}
 @media(max-width:760px){.footer-logo img{height:42px;max-width:175px}}
 /* PRINTIHA_HEADER_FOOTER_CHECKOUT_END */
 
@@ -586,6 +583,12 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
   #packs #packList > .pack.pack-tap{animation:none!important}
 }
 /* PRINTIHA_PACK_SELECTION_V2_END */
+
+/* PRINTIHA CHECKOUT VISUAL ADJUSTMENTS 2026-10-17 */
+#orderForm input:not(.err),#orderForm textarea:not(.err){border-color:#0d0d0d}
+#orderForm input:focus:not(.err),#orderForm textarea:focus:not(.err){border-color:#808080;outline:none;box-shadow:none}
+#submitBtn,#submitBtn:hover:not(:disabled){background:#0d0d0d;color:#ffffff}
+#stBtn,#stBtn:hover:not(:disabled){background:#ffffff;color:#0d0d0d}
 </style>
 </head>
 <body>
@@ -671,8 +674,6 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
       <textarea id="fAdr" rows="2" autocomplete="street-address" placeholder="Quartier, rue, numéro"></textarea>
       <div style="margin-top:18px"><button type="submit" class="btn block" id="submitBtn">Confirmer ma commande →</button></div>
       <div class="msg" id="formMsg" role="alert"></div>
-      <a class="btn block order-wa-link" id="waOrderFallback" href="#" target="_blank" rel="noopener noreferrer" hidden>Ouvrir WhatsApp pour envoyer ma commande →</a>
-      <p class="note" id="waOrderHelp" hidden>Si WhatsApp ne s’ouvre pas, utilise le bouton ci-dessus. Il faut envoyer le message dans WhatsApp pour finaliser la commande.</p>
       <p class="note">🚚 Livraison gratuite 1 à 3 jours · Paiement à la livraison</p>
     </form>
   </div>
@@ -1189,8 +1190,6 @@ $("orderForm").addEventListener("submit", function (e) {
   e.preventDefault();
   var msg = $("formMsg");
   msg.style.display = "none";
-  $("waOrderFallback").hidden = true;
-  $("waOrderHelp").hidden = true;
   // Name and city are mandatory; phone and address never block the WhatsApp order.
   ["fNom", "fTel", "fVille", "fAdr"].forEach(function (f) { $(f).classList.remove("err"); });
 
@@ -1228,10 +1227,6 @@ $("orderForm").addEventListener("submit", function (e) {
     "Merci de confirmer ma commande";
 
   var orderUrl = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text);
-  var fallback = $("waOrderFallback");
-  fallback.href = orderUrl;
-  fallback.hidden = false;
-  $("waOrderHelp").hidden = false;
   // Contact is a WhatsApp handoff attempt, not a confirmed order or purchase.
   trackPrintihaPixel("Contact", printihaCartPixelData());
   // A direct click opens WhatsApp. If the browser blocks new tabs, navigate in the same tab.
