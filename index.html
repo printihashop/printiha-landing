@@ -1239,17 +1239,23 @@ $("orderForm").addEventListener("submit", function (e) {
   var orderUrl = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text);
   // Contact is a WhatsApp handoff attempt, not a confirmed order or purchase.
   trackPrintihaPixel("Contact", printihaCartPixelData());
-  // A direct click opens WhatsApp. If the browser blocks new tabs, navigate in the same tab.
+  // Keep the WhatsApp handoff; the thank-you page is not proof of a confirmed sale.
+  var reference = "PRINTIHA-" + Date.now().toString(36).toUpperCase();
+  try {
+    sessionStorage.setItem("printiha_pending_order", JSON.stringify({
+      reference: reference, pack: p.name,
+      designs: pickedList().join(", "), size: state.size,
+      name: nom, phone: tel, city: ville, address: adr,
+      total: p.price + " DH", whatsappUrl: orderUrl
+    }));
+  } catch (_) {}
   try {
     var opened = window.open(orderUrl, "_blank");
     if (opened) {
       try { opened.opener = null; } catch (_) {}
-    } else {
-      window.location.assign(orderUrl);
     }
-  } catch (_) {
-    window.location.assign(orderUrl);
-  }
+  } catch (_) {}
+  window.location.assign("/merci.html");
 });
 
 $("waFooter").href = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent("Salut Printiha 👋 J'ai une question.");
