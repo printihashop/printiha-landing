@@ -595,8 +595,8 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
 /* PRINTIHA_PACK_SELECTION_V2_END */
 
 /* PRINTIHA CHECKOUT VISUAL ADJUSTMENTS 2026-10-17 */
-#orderForm input:not(.err),#orderForm textarea:not(.err){border-color:#0d0d0d}
-#orderForm input:focus:not(.err),#orderForm textarea:focus:not(.err){border-color:#808080;outline:none;box-shadow:none}
+#orderForm input,#orderForm textarea,#orderForm input.err,#orderForm textarea.err{border-color:#0d0d0d}
+#orderForm input:focus,#orderForm textarea:focus,#orderForm input.err:focus,#orderForm textarea.err:focus{border-color:#808080;outline:none;box-shadow:none}
 #submitBtn,#submitBtn:hover:not(:disabled){background:#0d0d0d;color:#ffffff}
 #stBtn,#stBtn:hover:not(:disabled){background:#ffffff;color:#0d0d0d}
 </style>
