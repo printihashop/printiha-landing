@@ -275,7 +275,7 @@ section.step{scroll-margin-top:78px;border-top-color:#0d0d0d}
 .form{background:#ffffff;border-color:#0d0d0d}
 .recap{border-bottom-color:#0d0d0d}
 .recap .row span:first-child{color:#0d0d0d}
-.recap .tot span:last-child{color:#ff0000}
+.recap .tot span:last-child{color:#0d0d0d}
 input,textarea{background:#ffffff;border-color:#0d0d0d;color:#0d0d0d}
 input::placeholder,textarea::placeholder{color:#0d0d0d}
 input:focus,textarea:focus{border-color:#ff0000}
@@ -599,6 +599,9 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
 #orderForm input:focus,#orderForm textarea:focus,#orderForm input.err:focus,#orderForm textarea.err:focus{border-color:#808080;outline:none;box-shadow:none}
 #submitBtn,#submitBtn:hover:not(:disabled){background:#0d0d0d;color:#ffffff}
 #stBtn,#stBtn:hover:not(:disabled){background:#ffffff;color:#0d0d0d}
+
+/* Checkout total must stay black on mobile, desktop and all states */
+#commande .recap .tot span:last-child{color:#0d0d0d!important}
 </style>
 </head>
 <body>
