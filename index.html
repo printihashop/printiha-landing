@@ -584,6 +584,13 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
 }
 /* PRINTIHA_PACK_SELECTION_V2_END */
 
+/* PRINTIHA MOBILE CHECKOUT FIX — keep mobile and desktop identical */
+@media (max-width:760px){
+  #orderForm input:not(.err),#orderForm textarea:not(.err){border-color:#0d0d0d!important}
+  #orderForm input:focus:not(.err),#orderForm textarea:focus:not(.err){border-color:#808080!important;outline:none!important;box-shadow:none!important}
+  #submitBtn,#submitBtn:hover:not(:disabled){background:#0d0d0d!important;color:#ffffff!important}
+  .sticky #stBtn,.sticky #stBtn:hover:not(:disabled){background:#ffffff!important;color:#0d0d0d!important}
+}
 /* PRINTIHA CHECKOUT VISUAL ADJUSTMENTS 2026-10-17 */
 #orderForm input:not(.err),#orderForm textarea:not(.err){border-color:#0d0d0d}
 #orderForm input:focus:not(.err),#orderForm textarea:focus:not(.err){border-color:#808080;outline:none;box-shadow:none}
