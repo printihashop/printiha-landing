@@ -1249,12 +1249,7 @@ $("orderForm").addEventListener("submit", function (e) {
       total: p.price + " DH", whatsappUrl: orderUrl
     }));
   } catch (_) {}
-  try {
-    var opened = window.open(orderUrl, "_blank");
-    if (opened) {
-      try { opened.opener = null; } catch (_) {}
-    }
-  } catch (_) {}
+  // WhatsApp opens only when the customer clicks the green button on merci.html.
   window.location.assign("/merci.html");
 });
 
