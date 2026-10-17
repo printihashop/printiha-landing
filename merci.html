@@ -9,7 +9,7 @@ if(!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)){
   try {
     var parsed=new URL(whatsappLink);
     if(parsed.hostname==='wa.me'||parsed.hostname==='api.whatsapp.com'){
-      var phone=parsed.hostname==='wa.me'?parsed.pathname.replace(/^\\/+/,''):parsed.searchParams.get('phone');
+      var phone=parsed.hostname==='wa.me'?parsed.pathname.split('/').filter(Boolean).join(''):parsed.searchParams.get('phone');
       var message=parsed.searchParams.get('text')||'';
       if(phone)whatsappLink='https://web.whatsapp.com/send?phone='+encodeURIComponent(phone)+'&text='+encodeURIComponent(message);
     }
