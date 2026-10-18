@@ -13,7 +13,7 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window,document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init','1616409290185334');
+fbq('init','2687042385051824');
 fbq('track','PageView');
 fbq('track','ViewContent',{
   content_type:'product_group',
@@ -23,7 +23,7 @@ fbq('track','ViewContent',{
 });
 </script>
 <noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1616409290185334&amp;ev=PageView&amp;noscript=1"
+src="https://www.facebook.com/tr?id=2687042385051824&amp;ev=PageView&amp;noscript=1"
 alt=""></noscript>
 <!-- PRINTIHA_META_PIXEL_END -->
 <title>Printiha · T-shirts rap marocain imprimés DTF</title>
@@ -869,6 +869,7 @@ var SIZES = [
 var state = { size: null, pack: 3, packChosen: false, picks: {} };
 // Meta Pixel: only product selections and totals; never send customer contact details.
 var printihaCheckoutTracked = false;
+var printihaPurchaseTracked = false;
 function trackPrintihaPixel(eventName, data) {
   if (typeof window.fbq === "function") window.fbq("track", eventName, data || {});
 }
@@ -1290,9 +1291,12 @@ $("orderForm").addEventListener("submit", function (e) {
     "Merci de confirmer ma commande";
 
   var orderUrl = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text);
-  // Contact is a WhatsApp handoff attempt, not a confirmed order or purchase.
-  trackPrintihaPixel("Contact", printihaCartPixelData());
-  // Keep the WhatsApp handoff; the thank-you page is not proof of a confirmed sale.
+  // Count a valid "Confirmer ma commande" submission as Purchase (COD order placed).
+  // This represents an order submission, not a delivered or paid order.
+  if (printihaPurchaseTracked) return;
+  printihaPurchaseTracked = true;
+  trackPrintihaPixel("Purchase", printihaCartPixelData());
+  // WhatsApp handoff remains optional on the thank-you page.
   var reference = "PRINTIHA-" + Date.now().toString(36).toUpperCase();
   try {
     sessionStorage.setItem("printiha_pending_order", JSON.stringify({
