@@ -909,15 +909,10 @@ function renderDesigns() {
     return '<div class="dcard' + (q > 0 ? " on" : "") + '">' +
       '<div class="dimg" data-design="' + d.id + '">' +
         '<img class="dslide active" data-view="back" src="' + d.img + '" alt="' + escapeProductHtml(d.name) + ' — dos" loading="lazy">' +
-        '<img class="dslide" data-view="front" src="' + d.img.replace(/\.webp$/i, '-front.webp') + '" alt="' + escapeProductHtml(d.name) + ' — devant" loading="lazy">' +
-        '<button type="button" class="carousel-btn prev" data-carousel="prev" aria-label="Photo précédente">‹</button>' +
-        '<button type="button" class="carousel-btn next" data-carousel="next" aria-label="Photo suivante">›</button>' +
-        '<div class="carousel-dots"><button type="button" class="active" data-carousel="back" aria-label="Voir le dos"></button><button type="button" data-carousel="front" aria-label="Voir le devant"></button></div>' +
         '<span class="cnt">' + q + '</span>' +
       '</div>' +
       '<div class="dbody">' +
         '<div class="dname">' + escapeProductHtml(d.name) + '</div>' +
-        '<div class="dsub">' + escapeProductHtml(d.sub) + '</div>' +
         '<div class="qty">' +
           '<button type="button" data-id="' + d.id + '" data-op="-1"' + (q === 0 ? " disabled" : "") + '>−</button>' +
           '<span>' + q + '</span>' +
