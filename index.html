@@ -610,12 +610,24 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
 #commande .recap .tot .total-prices{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;column-gap:9px;row-gap:3px;text-align:right}
 #commande .recap .tot .total-before{color:#858585!important;font-size:14px;font-weight:500;text-decoration:line-through;text-decoration-color:#858585;white-space:nowrap}
 #commande .recap .tot .total-after{color:#0d0d0d!important;font-size:20px;font-weight:800;white-space:nowrap}
+
+/* PRINTIHA HERO CINEMATIC CAROUSEL */
+.hero-carousel{position:relative;width:100%;overflow:hidden;background:#0d0d0d}
+.hero-carousel .hero-frame{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:cover;opacity:0;transform:scale(1.09) translate3d(1.5%,0,0);filter:brightness(.84);transition:opacity 900ms cubic-bezier(.22,1,.36,1),transform 3.4s cubic-bezier(.2,.65,.3,1),filter 900ms ease;will-change:opacity,transform;pointer-events:none}
+.hero-carousel .hero-frame.is-active{opacity:1;transform:scale(1) translate3d(0,0,0);filter:brightness(1);z-index:1}
+.hero-carousel .hero-frame.is-exiting{opacity:0;transform:scale(1.035) translate3d(-1.2%,0,0);z-index:2}
+.hero-carousel{height:clamp(480px,65vh,760px)}
+@media(max-width:760px){.hero-carousel{height:clamp(540px,177vw,760px)}}
+@media(prefers-reduced-motion:reduce){.hero-carousel .hero-frame{transition:opacity 150ms linear!important;transform:none!important;filter:none!important}}
 </style>
 </head>
 <body>
 
 <div class="hero" id="top">
-  <img class="hero-img" src="hero.webp" alt="T-shirts Printiha imprimés rap marocain" onerror="this.removeAttribute('src')">
+  <div class="hero-carousel" aria-label="Images de la collection PRINTIHA">
+    <img class="hero-img hero-frame is-active" src="hero.webp" alt="Collection PRINTIHA — visuel 1" fetchpriority="high" onerror="this.removeAttribute('src')">
+    <img class="hero-img hero-frame" src="hero2.webp" alt="Collection PRINTIHA — visuel 2" loading="eager" onerror="this.removeAttribute('src')">
+  </div>
   <div class="hero-ov">
     <div class="wrap">
       <span class="tag">DROP 01 — PRINTIHA</span>
@@ -2406,6 +2418,37 @@ renderAll();
   });
 })();
 
+</script>
+
+<script>
+/* Two-image hero carousel — 2.5s cadence, cinematic crossfade and gentle zoom */
+(function(){
+  const hero=document.querySelector('#top .hero-carousel');
+  if(!hero)return;
+  const frames=Array.from(hero.querySelectorAll('.hero-frame'));
+  if(frames.length<2)return;
+  let active=0;
+  let timer=null;
+  let transitionTimer=null;
+  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+  function next(){
+    const previous=frames[active];
+    active=(active+1)%frames.length;
+    const incoming=frames[active];
+    previous.classList.add('is-exiting');
+    incoming.classList.remove('is-exiting');
+    incoming.classList.add('is-active');
+    previous.classList.remove('is-active');
+    window.clearTimeout(transitionTimer);
+    transitionTimer=window.setTimeout(()=>previous.classList.remove('is-exiting'),950);
+  }
+  function start(){if(timer===null&&!document.hidden)timer=window.setInterval(next,2500)}
+  function stop(){if(timer!==null){window.clearInterval(timer);timer=null}}
+  document.addEventListener('visibilitychange',()=>document.hidden?stop():start());
+  const observer=new IntersectionObserver(entries=>entries[0].isIntersecting?start():stop(),{threshold:0.05});
+  observer.observe(hero);
+  frames[1].addEventListener('error',()=>{stop();observer.disconnect();frames[1].style.display='none'});
+})();
 </script>
 </body>
 </html>
