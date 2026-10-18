@@ -875,6 +875,14 @@ var printihaPurchaseTracked = false;
 function trackPrintihaPixel(eventName, data) {
   if (typeof window.fbq === "function") window.fbq("track", eventName, data || {});
 }
+function trackPrintihaSelection(eventName, data) {
+  if (typeof window.fbq === "function") window.fbq("trackCustom", eventName, data);
+}
+function applyPrintihaSize(value) {
+  if (state.size === value) return;
+  state.size = value;
+  trackPrintihaSelection("SelectSize", { size: value });
+}
 function printihaCartPixelData() {
   var offer = getActiveOffer();
   var contents = Object.keys(state.picks).filter(function(id) {
@@ -1107,14 +1115,14 @@ function selectSize(value) {
     if (selected) selected.classList.add("is-selecting", "on");
     sizeModalSelectTimer = setTimeout(function() {
       sizeModalSelectTimer = null;
-      state.size = value;
+      applyPrintihaSize(value);
       renderAll();
       closeSizeModal();
       toast("Taille " + state.size + " sélectionnée");
     }, sizeModalReducedMotion() ? 0 : 150);
     return;
   }
-  state.size = value;
+  applyPrintihaSize(value);
   renderAll();
   toast("Taille " + state.size + " sélectionnée");
 }
@@ -1169,8 +1177,11 @@ $("sizes").addEventListener("click", function(e) {
 $("packList").addEventListener("click", function (e) {
   var b = e.target.closest(".pack");
   if (!b) return;
-  state.pack = parseInt(b.getAttribute("data-n"), 10);
+  var nextPack = parseInt(b.getAttribute("data-n"), 10);
+  var packChanged = !state.packChosen || state.pack !== nextPack;
+  state.pack = nextPack;
   state.packChosen = true;
+  if (packChanged) trackPrintihaSelection("SelectPack", { pack: getPack().name, pack_size: state.pack });
   var chosen = totalPicked();
   renderAll();
   var active = $("packList").querySelector('.pack[data-n="' + state.pack + '"]');
