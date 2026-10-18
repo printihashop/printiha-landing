@@ -13,6 +13,8 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window,document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
+// Disable Meta automatic event detection; retain only explicitly tracked events.
+fbq('set','autoConfig',false,'1785602576047437');
 fbq('init','1785602576047437');
 fbq('track','PageView');
 fbq('track','ViewContent',{
