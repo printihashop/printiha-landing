@@ -611,14 +611,15 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
 #commande .recap .tot .total-before{color:#858585!important;font-size:14px;font-weight:500;text-decoration:line-through;text-decoration-color:#858585;white-space:nowrap}
 #commande .recap .tot .total-after{color:#0d0d0d!important;font-size:20px;font-weight:800;white-space:nowrap}
 
-/* PRINTIHA HERO CINEMATIC CAROUSEL */
-.hero-carousel{position:relative;width:100%;overflow:hidden;background:#0d0d0d}
-.hero-carousel .hero-frame{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:cover;opacity:0;transform:scale(1.09) translate3d(1.5%,0,0);filter:brightness(.84);transition:opacity 900ms cubic-bezier(.22,1,.36,1),transform 3.4s cubic-bezier(.2,.65,.3,1),filter 900ms ease;will-change:opacity,transform;pointer-events:none}
-.hero-carousel .hero-frame.is-active{opacity:1;transform:scale(1) translate3d(0,0,0);filter:brightness(1);z-index:1}
-.hero-carousel .hero-frame.is-exiting{opacity:0;transform:scale(1.035) translate3d(-1.2%,0,0);z-index:2}
-.hero-carousel{height:clamp(480px,65vh,760px)}
-@media(max-width:760px){.hero-carousel{height:clamp(540px,177vw,760px)}}
-@media(prefers-reduced-motion:reduce){.hero-carousel .hero-frame{transition:opacity 150ms linear!important;transform:none!important;filter:none!important}}
+/* PRINTIHA HERO IMAGE-ONLY LEFT SWIPE CAROUSEL */
+.hero-carousel{position:relative;width:100%;height:clamp(480px,65vh,760px);overflow:hidden;background:#0d0d0d;isolation:isolate}
+.hero-carousel .hero-frame{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:cover;object-position:center 28%;transform:translate3d(100%,0,0);opacity:1;transition:transform 850ms cubic-bezier(.76,0,.24,1);will-change:transform;pointer-events:none}
+.hero-carousel .hero-frame.is-active{transform:translate3d(0,0,0)}
+.hero-carousel .hero-frame.is-exiting{transform:translate3d(-100%,0,0)}
+.hero-ov{z-index:3;pointer-events:none}
+.hero-ov a,.hero-ov button{pointer-events:auto}
+@media(max-width:760px){.hero-carousel{height:clamp(540px,177vw,760px)}.hero-carousel .hero-frame{object-position:center top}}
+@media(prefers-reduced-motion:reduce){.hero-carousel .hero-frame{transition-duration:1ms!important}}
 </style>
 </head>
 <body>
@@ -2421,28 +2422,41 @@ renderAll();
 </script>
 
 <script>
-/* Two-image hero carousel — 2.5s cadence, cinematic crossfade and gentle zoom */
+/* Only hero images swipe left every 3.5 seconds; overlay stays fixed */
 (function(){
   const hero=document.querySelector('#top .hero-carousel');
   if(!hero)return;
   const frames=Array.from(hero.querySelectorAll('.hero-frame'));
   if(frames.length<2)return;
-  let active=0;
-  let timer=null;
-  let transitionTimer=null;
-  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+  let active=0,timer=null,transitionTimer=null,animating=false;
   function next(){
-    const previous=frames[active];
-    active=(active+1)%frames.length;
-    const incoming=frames[active];
-    previous.classList.add('is-exiting');
+    if(animating)return;
+    animating=true;
+    const outgoing=frames[active];
+    const nextIndex=(active+1)%frames.length;
+    const incoming=frames[nextIndex];
     incoming.classList.remove('is-exiting');
+    incoming.classList.remove('is-active');
+    incoming.style.transition='none';
+    incoming.style.transform='translate3d(100%,0,0)';
+    void incoming.offsetWidth;
+    incoming.style.transition='';
+    outgoing.classList.add('is-exiting');
+    outgoing.classList.remove('is-active');
     incoming.classList.add('is-active');
-    previous.classList.remove('is-active');
     window.clearTimeout(transitionTimer);
-    transitionTimer=window.setTimeout(()=>previous.classList.remove('is-exiting'),950);
+    transitionTimer=window.setTimeout(()=>{
+      outgoing.classList.remove('is-exiting');
+      outgoing.style.transition='none';
+      outgoing.style.transform='translate3d(100%,0,0)';
+      void outgoing.offsetWidth;
+      outgoing.style.transition='';
+      outgoing.style.transform='';
+      active=nextIndex;
+      animating=false;
+    },900);
   }
-  function start(){if(timer===null&&!document.hidden)timer=window.setInterval(next,2500)}
+  function start(){if(timer===null&&!document.hidden)timer=window.setInterval(next,3500)}
   function stop(){if(timer!==null){window.clearInterval(timer);timer=null}}
   document.addEventListener('visibilitychange',()=>document.hidden?stop():start());
   const observer=new IntersectionObserver(entries=>entries[0].isIntersecting?start():stop(),{threshold:0.05});
