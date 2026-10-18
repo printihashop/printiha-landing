@@ -1320,8 +1320,9 @@ $("orderForm").addEventListener("submit", function (e) {
       total: p.price + " DH", whatsappUrl: orderUrl
     }));
   } catch (_) {}
+  // Give the browser a short moment to dispatch the Purchase pixel request before navigation.
   // WhatsApp opens only when the customer clicks the green button on merci.html.
-  window.location.assign("/merci.html");
+  window.setTimeout(function() { window.location.assign("/merci.html"); }, 450);
 });
 
 $("waFooter").href = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent("Salut Printiha 👋 J'ai une question.");
