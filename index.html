@@ -611,6 +611,9 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
 #commande .recap .tot .total-before{color:#858585!important;font-size:14px;font-weight:500;text-decoration:line-through;text-decoration-color:#858585;white-space:nowrap}
 #commande .recap .tot .total-after{color:#0d0d0d!important;font-size:20px;font-weight:800;white-space:nowrap}
 
+/* Uniform card border for all ten designs, including selected state */
+#grid > .dcard{border:1.5px solid #0d0d0d!important}
+#grid > .dcard.on{border-color:#E9A5B5!important}
 /* Designs 7–10: same presentation as existing designs 1–6 */
 #grid > .dcard:nth-child(n+7):nth-child(-n+10){background:#ffffff!important;color:#0d0d0d!important;border-color:#0d0d0d!important}
 #grid > .dcard:nth-child(n+7):nth-child(-n+10).on{border-color:#E9A5B5!important}
