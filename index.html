@@ -19,8 +19,8 @@ fbq('init','1785602576047437');
 fbq('track','PageView');
 fbq('track','ViewContent',{
   content_type:'product_group',
-  content_ids:['SALGOAT'],
-  content_name:'PRINTIHA SALGOAT T-shirts',
+  content_ids:['PRINTIHA-DESIGNS'],
+  content_name:'PRINTIHA T-shirts',
   currency:'MAD'
 });
 </script>
@@ -1303,7 +1303,7 @@ $("orderForm").addEventListener("submit", function (e) {
   try {
     sessionStorage.setItem("printiha_pending_order", JSON.stringify({
       reference: reference, pack: p.name,
-      designs: pickedList().join(", "), models: DESIGNS.filter(function(d){return state.picks[d.id]>0;}).map(function(d){return {version:d.name.replace(/^SALGOAT-/i,""),color:d.sub,quantity:state.picks[d.id]};}), size: state.size,
+      designs: pickedList().join(", "), models: DESIGNS.filter(function(d){return state.picks[d.id]>0;}).map(function(d){return {version:d.name,color:d.sub,quantity:state.picks[d.id]};}), size: state.size,
       name: nom, phone: tel, city: ville, address: adr,
       total: p.price + " DH", whatsappUrl: orderUrl
     }));
