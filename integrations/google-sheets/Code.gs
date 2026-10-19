@@ -25,7 +25,7 @@ function doPost(e) {
       if (!sheet) throw Error('Orders sheet missing');
       const last = sheet.getLastRow();
       if (last > 1) {
-        const existing = sheet.getRange(2,22,last-1,1).createTextFinder(String(o.reference)).matchEntireCell(true).findNext();
+        const existing = sheet.getRange(2,20,last-1,1).createTextFinder(String(o.reference)).matchEntireCell(true).findNext();
         if (existing) return output_({ok:true,reference:sheet.getRange(existing.getRow(),2).getDisplayValue(),duplicate:true});
       }
       const props = PropertiesService.getScriptProperties();
@@ -44,7 +44,12 @@ function doPost(e) {
       const link = '=HYPERLINK("https://wa.me/212'+phone.slice(1)+'","Envoyer")';
       sheet.insertRowBefore(2);
       sheet.getRange(2,4).setNumberFormat('@');
-      sheet.getRange(2,1,1,22).setValues([[new Date(),publicId,safe(o.name),phone,safe(o.city),safe(o.address),price,items,safe(o.size),colors,safe(o.pack),quantity,'En attente',false,false,false,false,false,false,link,'',String(o.reference)]]);
+      // Current Orders layout: A:L order data; M:Q status checkboxes; R WhatsApp; S notes; T hidden request ID.
+      // Insert at top so newest orders remain visible without overwriting existing orders.
+      sheet.getRange(2,1,1,20).setValues([[new Date(),publicId,safe(o.name),phone,safe(o.city),safe(o.address),price,items,safe(o.size),colors,safe(o.pack),quantity,false,false,false,false,false,link,'',String(o.reference)]]);
+      sheet.getRange(2,13,1,5).insertCheckboxes();
+      sheet.getRange(2,4).setNumberFormat('@');
+      sheet.getRange(2,7).setNumberFormat('0" DH"');
       props.setProperty('PRINTIHA_LAST_ORDER_NUMBER',String(next));
       return output_({ok:true,reference:publicId});
     } finally { lock.releaseLock(); }
