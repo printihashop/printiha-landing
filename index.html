@@ -1268,7 +1268,7 @@ $("stBtn").addEventListener("click", function () {
 });
 
 $("orderForm").addEventListener("focusin", trackPrintihaCheckoutStart);
-$("orderForm").addEventListener("submit", function (e) {
+$("orderForm").addEventListener("submit", async function (e) {
   e.preventDefault();
   var msg = $("formMsg");
   msg.style.display = "none";
@@ -1309,24 +1309,37 @@ $("orderForm").addEventListener("submit", function (e) {
     "Merci de confirmer ma commande";
 
   var orderUrl = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(text);
-  // Count a valid "Confirmer ma commande" submission as Purchase (COD order placed).
-  // This represents an order submission, not a delivered or paid order.
+  // A successful server-side save is required before confirming an order.
   if (printihaPurchaseTracked) return;
-  printihaPurchaseTracked = true;
-  trackPrintihaPixel("Purchase", printihaCartPixelData());
-  // WhatsApp handoff remains optional on the thank-you page.
-  var reference = "PRINTIHA-" + Date.now().toString(36).toUpperCase();
+  var submitButton = $("submitBtn");
+  if (submitButton.disabled) return;
+  var reference = "PRINTIHA-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2,8).toUpperCase();
+  var models = DESIGNS.filter(function(d){return state.picks[d.id]>0;}).map(function(d){return {version:d.name,color:d.sub,quantity:state.picks[d.id]};});
+  var order = {
+    reference:reference,pack:p.name,designs:pickedList().join(", "),models:models,
+    size:state.size,name:nom,phone:tel,city:ville,address:adr,
+    price:p.price,total:p.price+" DH",whatsappUrl:orderUrl
+  };
+  submitButton.disabled = true;
+  submitButton.textContent = "Enregistrement en cours…";
   try {
-    sessionStorage.setItem("printiha_pending_order", JSON.stringify({
-      reference: reference, pack: p.name,
-      designs: pickedList().join(", "), models: DESIGNS.filter(function(d){return state.picks[d.id]>0;}).map(function(d){return {version:d.name,color:d.sub,quantity:state.picks[d.id]};}), size: state.size,
-      name: nom, phone: tel, city: ville, address: adr,
-      total: p.price + " DH", whatsappUrl: orderUrl
-    }));
-  } catch (_) {}
-  // Give the browser a short moment to dispatch the Purchase pixel request before navigation.
-  // WhatsApp opens only when the customer clicks the green button on merci.html.
-  window.setTimeout(function() { window.location.assign("/merci.html"); }, 450);
+    var response = await fetch("/api/orders",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(order)
+    });
+    var result = await response.json();
+    if (!response.ok || !result.ok) throw new Error("Save failed");
+    try { sessionStorage.setItem("printiha_pending_order",JSON.stringify(order)); } catch (_) {}
+    printihaPurchaseTracked = true;
+    trackPrintihaPixel("Purchase", printihaCartPixelData());
+    window.location.assign("/merci.html");
+  } catch (_) {
+    msg.textContent = "Impossible d’enregistrer ta commande pour le moment. Réessaie dans quelques instants.";
+    msg.style.display = "block";
+    toast("Commande non enregistrée. Réessaie.");
+    submitButton.disabled = false;
+    submitButton.textContent = "Confirmer ma commande →";
+  }
 });
 
 $("waFooter").href = "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent("Salut Printiha 👋 J'ai une question.");
