@@ -25,8 +25,8 @@ function doPost(e) {
       if (!sheet) throw Error('Orders sheet missing');
       const last = sheet.getLastRow();
       if (last > 1) {
-        const existing = sheet.getRange(2,2,last-1,1).createTextFinder(String(o.reference)).matchEntireCell(true).findNext();
-        if (existing) return output_({ok:true,reference:o.reference,duplicate:true});
+        const existing = sheet.getRange(2,22,last-1,1).createTextFinder(String(o.reference)).matchEntireCell(true).findNext();
+        if (existing) return output_({ok:true,reference:sheet.getRange(existing.getRow(),2).getDisplayValue(),duplicate:true});
       }
       const props = PropertiesService.getScriptProperties();
       const prior = Number(props.getProperty('PRINTIHA_LAST_ORDER_NUMBER') || 0);
@@ -44,7 +44,7 @@ function doPost(e) {
       const link = '=HYPERLINK("https://wa.me/212'+phone.slice(1)+'","Envoyer")';
       sheet.insertRowBefore(2);
       sheet.getRange(2,4).setNumberFormat('@');
-      sheet.getRange(2,1,1,21).setValues([[new Date(),publicId,safe(o.name),phone,safe(o.city),safe(o.address),price,items,safe(o.size),colors,safe(o.pack),quantity,'En attente',false,false,false,false,false,false,link,'']]);
+      sheet.getRange(2,1,1,22).setValues([[new Date(),publicId,safe(o.name),phone,safe(o.city),safe(o.address),price,items,safe(o.size),colors,safe(o.pack),quantity,'En attente',false,false,false,false,false,false,link,'',String(o.reference)]]);
       props.setProperty('PRINTIHA_LAST_ORDER_NUMBER',String(next));
       return output_({ok:true,reference:publicId});
     } finally { lock.releaseLock(); }
