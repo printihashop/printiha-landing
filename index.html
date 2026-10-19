@@ -712,7 +712,7 @@ body.has-sticky-deal .toast{bottom:calc(115px + env(safe-area-inset-bottom))}
       <label for="fNom">Nom complet</label>
       <input id="fNom" type="text" autocomplete="name" placeholder="Ex : Yassine Benali" required>
       <label for="fTel">Téléphone</label>
-      <input id="fTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 XX XX XX XX">
+      <input id="fTel" type="tel" inputmode="numeric" autocomplete="tel" placeholder="06 XX XX XX XX" maxlength="10" pattern="0[567][0-9]{8}" required>
       <label for="fVille">Ville</label>
       <input id="fVille" type="text" autocomplete="address-level2" placeholder="Ex : Casablanca" required>
       <label for="fAdr">Adresse (optionnel)</label>
@@ -1268,7 +1268,7 @@ $("orderForm").addEventListener("submit", function (e) {
   e.preventDefault();
   var msg = $("formMsg");
   msg.style.display = "none";
-  // Name and city are mandatory; phone and address never block the WhatsApp order.
+  // Name, city and a valid 10-digit Moroccan phone number are mandatory; address remains optional.
   ["fNom", "fTel", "fVille", "fAdr"].forEach(function (f) { $(f).classList.remove("err"); });
 
   // Show designs first, then size: never send the customer through the same step twice.
@@ -1276,20 +1276,20 @@ $("orderForm").addEventListener("submit", function (e) {
   if (!state.size) { msg.textContent = "Choisis ta taille."; msg.style.display = "block"; openSizeModal(); return; }
   trackPrintihaCheckoutStart();
 
-  // Keep the phone exactly as entered, even if it contains just one digit.
-  // The WhatsApp conversation itself is the reliable contact channel.
   var nom = $("fNom").value.trim();
-  var tel = $("fTel").value.trim() || "À confirmer via WhatsApp";
+  var tel = $("fTel").value.trim();
   var ville = $("fVille").value.trim();
   var adr = $("fAdr").value.trim();
 
-  if (!nom || !ville) {
+  var validPhone = /^0[567][0-9]{8}$/.test(tel);
+  if (!nom || !ville || !validPhone) {
     if (!nom) $("fNom").classList.add("err");
     if (!ville) $("fVille").classList.add("err");
-    msg.textContent = "Renseigne ton nom et ta ville pour continuer.";
+    if (!validPhone) $("fTel").classList.add("err");
+    msg.textContent = !validPhone ? "Numéro de téléphone invalide : saisis 10 chiffres commençant par 05, 06 ou 07." : "Renseigne ton nom et ta ville pour continuer.";
     msg.style.display = "block";
-    toast("Nom et ville obligatoires.");
-    (!nom ? $("fNom") : $("fVille")).focus();
+    toast(!validPhone ? "Vérifie ton numéro de téléphone (10 chiffres)." : "Nom et ville obligatoires.");
+    (!nom ? $("fNom") : !validPhone ? $("fTel") : $("fVille")).focus();
     return;
   }
 
