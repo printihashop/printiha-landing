@@ -33,7 +33,9 @@ function doPost(e) {
       const colors = models.map(m => safe(m.color)).filter(Boolean).join(' | ');
       const phone = String(o.phone);
       const link = '=HYPERLINK("https://wa.me/212'+phone.slice(1)+'","Envoyer")';
-      sheet.appendRow([new Date(),safe(o.reference),safe(o.name),phone,safe(o.city),safe(o.address),price,items,safe(o.size),colors,safe(o.pack),quantity,'En attente',false,false,false,false,false,false,link,'']);
+      sheet.insertRowBefore(2);
+      sheet.getRange(2,4).setNumberFormat('@');
+      sheet.getRange(2,1,1,21).setValues([[new Date(),safe(o.reference),safe(o.name),phone,safe(o.city),safe(o.address),price,items,safe(o.size),colors,safe(o.pack),quantity,'En attente',false,false,false,false,false,false,link,'']]);
       return output_({ok:true,reference:o.reference});
     } finally { lock.releaseLock(); }
   } catch(err) { console.error(err); return output_({ok:false,error:'Storage failed'}); }
