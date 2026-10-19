@@ -39,7 +39,18 @@ function doPost(e) {
       const publicId = 'PRINTIHA-' + String(next).padStart(6,'0');
       const safe = v => { const s=String(v??'').slice(0,500); return /^[=+@\-\t\r]/.test(s) ? "'"+s : s; };
       const items = models.map(m => Number(m.quantity)+' × '+safe(m.version)).join(' | ');
-      const colors = models.map(m => safe(m.color)).filter(Boolean).join(' | ');
+      // Sum T-shirt quantities by color; always display Blanc before Noir.
+      const colorCounts = {Blanc: 0, Noir: 0};
+      models.forEach(m => {
+        const color = String(m.color || '').trim().toLowerCase();
+        const qty = Number(m.quantity || 0);
+        if (color === 'blanc') colorCounts.Blanc += qty;
+        else if (color === 'noir') colorCounts.Noir += qty;
+      });
+      const colors = ['Blanc', 'Noir']
+        .filter(color => colorCounts[color] > 0)
+        .map(color => colorCounts[color] + 'x ' + color)
+        .join(' | ');
       const phone = String(o.phone);
       const link = '=HYPERLINK("https://wa.me/212'+phone.slice(1)+'","Envoyer")';
       sheet.insertRowBefore(2);
