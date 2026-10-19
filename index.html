@@ -1329,6 +1329,7 @@ $("orderForm").addEventListener("submit", async function (e) {
     });
     var result = await response.json();
     if (!response.ok || !result.ok) throw new Error("Save failed");
+    if (result.reference) order.reference = result.reference;
     try { sessionStorage.setItem("printiha_pending_order",JSON.stringify(order)); } catch (_) {}
     printihaPurchaseTracked = true;
     trackPrintihaPixel("Purchase", printihaCartPixelData());
