@@ -28,14 +28,12 @@ function doPost(e) {
         const existing = sheet.getRange(2,20,last-1,1).createTextFinder(String(o.reference)).matchEntireCell(true).findNext();
         if (existing) return output_({ok:true,reference:sheet.getRange(existing.getRow(),2).getDisplayValue(),duplicate:true});
       }
-      const props = PropertiesService.getScriptProperties();
-      const prior = Number(props.getProperty('PRINTIHA_LAST_ORDER_NUMBER') || 0);
       const allIds = last > 1 ? sheet.getRange(2,2,last-1,1).getDisplayValues() : [];
       const highest = allIds.reduce((n,row) => {
         const match = /^PRINTIHA-([0-9]{6,})$/.exec(String(row[0]));
         return match ? Math.max(n, Number(match[1])) : n;
       }, 0);
-      const next = Math.max(prior, highest) + 1;
+      const next = highest + 1;
       const publicId = 'PRINTIHA-' + String(next).padStart(6,'0');
       const safe = v => { const s=String(v??'').slice(0,500); return /^[=+@\-\t\r]/.test(s) ? "'"+s : s; };
       const items = models.map(m => Number(m.quantity)+' × '+safe(m.version)).join(' | ');
@@ -61,7 +59,6 @@ function doPost(e) {
       sheet.getRange(2,13,1,5).insertCheckboxes();
       sheet.getRange(2,4).setNumberFormat('@');
       sheet.getRange(2,7).setNumberFormat('0" DH"');
-      props.setProperty('PRINTIHA_LAST_ORDER_NUMBER',String(next));
       return output_({ok:true,reference:publicId});
     } finally { lock.releaseLock(); }
   } catch(err) { console.error(err); return output_({ok:false,error:'Storage failed'}); }
